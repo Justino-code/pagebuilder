@@ -10,8 +10,10 @@ class PageBuilderServiceProvider extends ServiceProvider
 {
     public function boot()
     {
-        $this->loadViewsFrom(__DIR__.'/../resources/views', 'pagebuilder');
-        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'pagebuilder');
+        //dd(__DIR__.'/resources/views');
+
+        $this->loadViewsFrom(__DIR__.'/resources/views', 'pagebuilder');
+        $this->loadTranslationsFrom(__DIR__.'/resources/lang', 'pagebuilder');
         
         if ($this->app->runningInConsole()) {
             $this->publishes([
@@ -19,11 +21,11 @@ class PageBuilderServiceProvider extends ServiceProvider
             ], 'pagebuilder-config');
             
             $this->publishes([
-                __DIR__.'/../resources/views' => resource_path('views/vendor/pagebuilder'),
+                __DIR__.'/resources/views' => resource_path('views/vendor/pagebuilder'),
             ], 'pagebuilder-views');
             
             $this->publishes([
-                __DIR__.'/../resources/assets' => public_path('vendor/pagebuilder'),
+                __DIR__.'/resources/assets' => public_path('vendor/pagebuilder'),
             ], 'pagebuilder-assets');
             
             /*$this->publishesMigrations([
@@ -31,7 +33,7 @@ class PageBuilderServiceProvider extends ServiceProvider
             ], 'pagebuilder-migrations');*/
 
             $this->publishes([
-                __DIR__.'/../resources/lang' => resource_path('lang/vendor/pagebuilder'),
+                __DIR__.'/resources/lang' => resource_path('lang/vendor/pagebuilder'),
             ], 'pagebuilder-lang');
         }
         
