@@ -1,0 +1,37 @@
+# -------------------------
+# Definir fim de linha
+# -------------------------
+* text=auto eol=lf
+
+# -------------------------
+# Arquivos para não exportar
+# -------------------------
+/tests export-ignore
+/.github export-ignore
+/.gitignore export-ignore
+/.gitattributes export-ignore
+/phpunit.xml export-ignore
+/phpunit.xml.dist export-ignore
+/phpstan.neon export-ignore
+/phpstan.neon.dist export-ignore
+/pint.json export-ignore
+/pint.json.dist export-ignore
+/.php_cs export-ignore
+/.php_cs.cache export-ignore
+/.php-cs-fixer.php export-ignore
+/.php-cs-fixer.cache export-ignore
+
+# Documentação / extras
+/README.md export-ignore
+/CHANGELOG.md export-ignore
+/UPGRADE.md export-ignore
+/CONTRIBUTING.md export-ignore
+
+# -------------------------
+# Linguagem padrão do pacote
+# -------------------------
+*.php text
+*.js text
+*.css text
+*.json text
+*.md text

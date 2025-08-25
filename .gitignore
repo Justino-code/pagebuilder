@@ -1,0 +1,59 @@
+# -------------------------
+# Composer
+# -------------------------
+/vendor/
+/composer.lock
+
+# -------------------------
+# Node / NPM / Yarn
+# -------------------------
+/node_modules/
+/npm-debug.log
+/yarn-error.log
+/pnpm-debug.log
+
+# -------------------------
+# Laravel / Framework
+# -------------------------
+/bootstrap/cache/*.php
+/storage/*.key
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+/storage/logs/*.log
+
+# -------------------------
+# Testes
+# -------------------------
+/phpunit.xml
+/phpunit.result.cache
+/.phpunit.cache/
+
+# -------------------------
+# IDE / Sistema
+# -------------------------
+.idea/
+.vscode/
+*.swp
+*.swo
+*.bak
+*.tmp
+.DS_Store
+Thumbs.db
+
+# -------------------------
+# Ambiente
+# -------------------------
+.env
+.env.*
+!.env.example
+
+# -------------------------
+# Outras
+# -------------------------
+/coverage/
+/build/
+/.cache/
+/dist/
+/public/storage

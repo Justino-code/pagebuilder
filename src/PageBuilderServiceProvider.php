@@ -1,0 +1,79 @@
+<?php
+
+namespace Justino\PageBuilder;
+
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Route;
+use Livewire\Livewire;
+
+class PageBuilderServiceProvider extends ServiceProvider
+{
+    public function boot()
+    {
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'pagebuilder');
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'pagebuilder');
+        
+        if ($this->app->runningInConsole()) {
+            $this->publishes([
+                __DIR__.'/../config/pagebuilder.php' => config_path('pagebuilder.php'),
+            ], 'pagebuilder-config');
+            
+            $this->publishes([
+                __DIR__.'/../resources/views' => resource_path('views/vendor/pagebuilder'),
+            ], 'pagebuilder-views');
+            
+            $this->publishes([
+                __DIR__.'/../resources/assets' => public_path('vendor/pagebuilder'),
+            ], 'pagebuilder-assets');
+            
+            $this->publishesMigrations([
+                __DIR__.'/../database/migrations' => database_path('migrations'),
+            ], 'pagebuilder-migrations');
+        }
+        
+        $this->registerRoutes();
+        $this->registerLivewireComponents();
+    }
+
+    public function register()
+    {
+        $this->mergeConfigFrom(
+        __DIR__.'/../config/pagebuilder.php', 'pagebuilder');
+    
+        $this->app->singleton(BlockManager::class, function ($app) {
+            return new BlockManager();
+        });
+        
+        $this->app->singleton(JsonPageStorage::class, function ($app) {
+            return new JsonPageStorage();
+        });
+        
+        $this->app->singleton(PageLogger::class, function ($app) {
+            return new PageLogger();
+        });
+        
+        // Registrar middleware
+        $this->app['router']->aliasMiddleware('pagebuilder.auth', Http\Middleware\PageBuilderAuth::class);
+    }
+    
+    protected function registerRoutes()
+    {
+        Route::group([
+            'prefix' => config('pagebuilder.route_prefix', 'page-builder'),
+            'middleware' => config('pagebuilder.middleware', ['web']),
+        ], function () {
+            $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+        });
+    }
+    
+    protected function registerLivewireComponents()
+    {
+        /*Livewire::component('page-builder-editor', Http\Livewire\PageBuilderEditor::class);
+        Livewire::component('page-builder-block', Http\Livewire\PageBuilderBlock::class);
+        Livewire::component('media-library', Http\Livewire\MediaLibrary::class);
+        
+        // Registrar outros blocos
+        Livewire::component('hero-block', Http\Livewire\Blocks\HeroBlock::class);
+        Livewire::component('text-block', Http\Livewire\Blocks\TextBlock::class);*/
+    }
+}
