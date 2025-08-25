@@ -2,16 +2,44 @@
 
 namespace Justino\PageBuilder\Http\Controllers;
 
-use Justino\PageBuilder\Models\Page;
+use Justino\PageBuilder\Services\JsonPageStorage;
+use Justino\PageBuilder\Services\BlockManager;
 
 class PageController extends Controller
 {
-    public function show(Page $page)
+    public function show($slug)
     {
-        if (!$page->published) {
-            abort(404);
+        $storage = app(JsonPageStorage::class);
+        $blockManager = app(BlockManager::class);
+        
+        $page = $storage->find($slug, 'page');
+        
+        if (!$page || !($page['published'] ?? false)) {
+            abort(404, 'Página não encontrada');
         }
         
-        return view('pagebuilder::page', compact('page'));
+        // Obter header e footer padrão
+        $header = $storage->getDefault('header');
+        $footer = $storage->getDefault('footer');
+        
+        return view('pagebuilder::page', compact('page', 'header', 'footer', 'blockManager'));
+    }
+    
+    public function preview($slug)
+    {
+        $storage = app(JsonPageStorage::class);
+        $blockManager = app(BlockManager::class);
+        
+        $page = $storage->find($slug, 'page');
+        
+        if (!$page) {
+            abort(404, 'Página não encontrada');
+        }
+        
+        // Para preview, mostramos mesmo não publicado
+        $header = $storage->getDefault('header');
+        $footer = $storage->getDefault('footer');
+        
+        return view('pagebuilder::page', compact('page', 'header', 'footer', 'blockManager'));
     }
 }

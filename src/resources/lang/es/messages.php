@@ -83,4 +83,20 @@ return [
     'not_found' => 'No Encontrado',
     'unauthorized' => 'No Autorizado',
     'validation_error' => 'Error de Validación',
+
+    'no_pages_found' => 'No se encontraron páginas.',
+    'create_first_page' => 'Crea tu primera página',
+    'confirm_delete_page' => '¿Estás seguro de que quieres eliminar esta página? Esta acción no se puede deshacer.',
+    'draft' => 'Borrador',
+    'publish' => 'Publicar',
+    'unpublish' => 'Despublicar',
+
+    'content' => 'Contenido',
+    'style' => 'Estilo',
+    'settings' => 'Configuraciones',
+    'no_blocks_added' => 'No se han añadido bloques. Haz clic en un tipo de bloque para empezar.',
+    'custom_css' => 'CSS Personalizado',
+    'add_custom_css' => 'Añade CSS personalizado aquí...',
+    'enable_header' => 'Habilitar Encabezado',
+    'enable_footer' => 'Habilitar Pie de Página',
 ];

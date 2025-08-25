@@ -83,4 +83,20 @@ return [
     'not_found' => 'Not Found',
     'unauthorized' => 'Unauthorized',
     'validation_error' => 'Validation Error',
+
+    'no_pages_found' => 'No pages found.',
+    'create_first_page' => 'Create your first page',
+    'confirm_delete_page' => 'Are you sure you want to delete this page? This action cannot be undone.',
+    'draft' => 'Draft',
+    'publish' => 'Publish',
+    'unpublish' => 'Unpublish',
+
+    'content' => 'Content',
+    'style' => 'Style',
+    'settings' => 'Settings',
+    'no_blocks_added' => 'No blocks added yet. Click on a block type to get started.',
+    'custom_css' => 'Custom CSS',
+    'add_custom_css' => 'Add custom CSS here...',
+    'enable_header' => 'Enable Header',
+    'enable_footer' => 'Enable Footer',
 ];
