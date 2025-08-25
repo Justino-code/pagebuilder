@@ -56,4 +56,11 @@ return [
         'include_media' => env('PAGEBUILDER_EXPORT_INCLUDE_MEDIA', false),
         'format' => env('PAGEBUILDER_EXPORT_FORMAT', 'json'),
     ],
+
+    'localization' => [
+        'enabled' => env('PAGEBUILDER_I18N_ENABLED', true),
+        'default_locale' => env('PAGEBUILDER_DEFAULT_LOCALE', 'pt'),
+        'available_locales' => ['en', 'pt', 'es'],
+        'auto_detect' => env('PAGEBUILDER_AUTO_DETECT_LOCALE', true),
+    ],
 ];

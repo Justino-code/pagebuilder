@@ -1,0 +1,86 @@
+<?php
+
+return [
+    // General
+    'save' => 'Save',
+    'cancel' => 'Cancel',
+    'edit' => 'Edit',
+    'delete' => 'Delete',
+    'create' => 'Create',
+    'upload' => 'Upload',
+    'select' => 'Select',
+    'confirm_delete' => 'Are you sure you want to delete this?',
+    
+    // Page Builder
+    'page_builder' => 'Page Builder',
+    'pages' => 'Pages',
+    'templates' => 'Templates',
+    'media_library' => 'Media Library',
+    
+    // Pages
+    'page_created' => 'Page created successfully.',
+    'page_updated' => 'Page updated successfully.',
+    'page_deleted' => 'Page deleted successfully.',
+    'page_published' => 'Page published successfully.',
+    'page_unpublished' => 'Page unpublished successfully.',
+    
+    // Templates
+    'template_created' => 'Template created successfully.',
+    'template_updated' => 'Template updated successfully.',
+    'template_deleted' => 'Template deleted successfully.',
+    'template_set_default' => 'Template set as default successfully.',
+    
+    // Media
+    'media_uploaded' => 'Media uploaded successfully.',
+    'media_deleted' => 'Media deleted successfully.',
+    
+    // Blocks
+    'blocks' => 'Blocks',
+    'add_block' => 'Add Block',
+    'block_added' => 'Block added successfully.',
+    'block_updated' => 'Block updated successfully.',
+    'block_removed' => 'Block removed successfully.',
+    
+    // Block Types
+    'block_hero' => 'Hero Section',
+    'block_text' => 'Text Content',
+    'block_cta' => 'Call to Action',
+    'block_cards' => 'Cards Grid',
+    'block_gallery' => 'Image Gallery',
+    'block_form' => 'Contact Form',
+    'block_header' => 'Header Template',
+    'block_footer' => 'Footer Template',
+    
+    // Form Labels
+    'title' => 'Title',
+    'slug' => 'Slug',
+    'content' => 'Content',
+    'description' => 'Description',
+    'image' => 'Image',
+    'background' => 'Background',
+    'color' => 'Color',
+    'style' => 'Style',
+    'published' => 'Published',
+    'default' => 'Default',
+    
+    // Actions
+    'actions' => 'Actions',
+    'view' => 'View',
+    'preview' => 'Preview',
+    'publish' => 'Publish',
+    'unpublish' => 'Unpublish',
+    'set_default' => 'Set as Default',
+    
+    // Navigation
+    'home' => 'Home',
+    'about' => 'About',
+    'contact' => 'Contact',
+    'login' => 'Login',
+    'logout' => 'Logout',
+    
+    // Errors
+    'error' => 'Error',
+    'not_found' => 'Not Found',
+    'unauthorized' => 'Unauthorized',
+    'validation_error' => 'Validation Error',
+];

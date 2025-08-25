@@ -26,9 +26,13 @@ class PageBuilderServiceProvider extends ServiceProvider
                 __DIR__.'/../resources/assets' => public_path('vendor/pagebuilder'),
             ], 'pagebuilder-assets');
             
-            $this->publishesMigrations([
+            /*$this->publishesMigrations([
                 __DIR__.'/../database/migrations' => database_path('migrations'),
-            ], 'pagebuilder-migrations');
+            ], 'pagebuilder-migrations');*/
+
+            $this->publishes([
+                __DIR__.'/../resources/lang' => resource_path('lang/vendor/pagebuilder'),
+            ], 'pagebuilder-lang');
         }
         
         $this->registerRoutes();
@@ -54,6 +58,12 @@ class PageBuilderServiceProvider extends ServiceProvider
         
         // Registrar middleware
         $this->app['router']->aliasMiddleware('pagebuilder.auth', Http\Middleware\PageBuilderAuth::class);
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                \Justino\PageBuilder\Console\Commands\InstallCommand::class,
+            ]);
+        }
     }
     
     protected function registerRoutes()
