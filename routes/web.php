@@ -26,9 +26,6 @@ Route::post('/form/submit', function (Request $request) {
         'recipient' => 'required|email',
     ]);
     
-    // Aqui você pode adicionar a lógica para enviar o email
-    // Mail::to($validated['recipient'])->send(new ContactFormMail($validated));
-    
     return back()->with('success', 'Message sent successfully!');
 })->name('pagebuilder.form.submit');
 

@@ -38,8 +38,14 @@ class InstallCommand extends Command
             File::makeDirectory($storagePath, 0755, true);
             File::makeDirectory($storagePath . '/media', 0755, true);
         }
-        
+
+        // Detectar host/porta atuais do artisan serve
+        $host = $_SERVER['SERVER_NAME'] ?? '127.0.0.1';
+        $port = $_SERVER['SERVER_PORT'] ?? 8000;
+
+        $baseUrl = "http://{$host}:{$port}/" . trim(config('pagebuilder.route.prefix', 'page-builder'), '/');
+
         $this->info('Page Builder installed successfully!');
-        $this->line('You can now access the page builder at: ' . url(config('pagebuilder.route.prefix', 'page-builder')));
+        $this->line("You can now access the page builder at: {$baseUrl}");
     }
 }

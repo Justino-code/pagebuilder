@@ -10,7 +10,6 @@ class PageBuilderServiceProvider extends ServiceProvider
 {
     public function boot()
     {
-        //dd(__DIR__.'/resources/views');
 
         $this->loadViewsFrom(__DIR__.'/resources/views', 'pagebuilder');
         $this->loadTranslationsFrom(__DIR__.'/resources/lang', 'pagebuilder');
