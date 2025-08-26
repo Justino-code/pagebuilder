@@ -88,6 +88,12 @@
                     >
                         {{ __('pagebuilder::messages.settings') }}
                     </button>
+                    <button 
+                        wire:click="openStyleEditor"
+                        class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors"
+                    >
+                        🎨 {{ __('pagebuilder::messages.visual_style') }}
+                    </button>
                 </div>
             </div>
             
@@ -192,6 +198,15 @@
         <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div class="bg-white rounded-lg w-full h-full max-w-6xl max-h-[90vh]">
                 <livewire:media-library />
+            </div>
+        </div>
+    @endif
+
+    <!-- Style Editor Modal -->
+    @if($showStyleEditor)
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-lg w-full h-full max-w-4xl max-h-[90vh] overflow-auto">
+                <livewire:style-editor :initialStyles="$pageStyles" />
             </div>
         </div>
     @endif

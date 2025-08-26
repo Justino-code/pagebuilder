@@ -35,6 +35,10 @@ class PageBuilderEditor extends Component
     public $showMediaLibrary = false;
     public $mediaFieldActive = null;
 
+    // Styles
+    public $showStyleEditor = false;
+    public $pageStyles = [];
+    
     protected $listeners = [
         'mediaSelected'
     ];
@@ -184,6 +188,30 @@ public function handleOpenMediaLibrary($field)
             $this->mediaFieldActive = null;
         }
         $this->showMediaLibrary = false;
+    }
+
+    #[On('open-style-editor')]
+    public function openStyleEditor()
+    {
+        $this->showStyleEditor = true;
+    }
+
+    #[On('stylesApplied')]
+    public function applyStyles($styles, $css)
+    {
+        $this->pageStyles = $styles;
+        $this->customCss = $css . "\n" . $this->customCss;
+        $this->showStyleEditor = false;
+        
+        session()->flash('message', Translator::trans('styles_applied'));
+    }
+
+    public function selectElement()
+    {
+        $this->dispatch('elementSelected', 
+            type: $this->block['type'],
+            id: $this->index
+        );
     }
     
     public function render()

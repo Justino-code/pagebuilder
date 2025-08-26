@@ -110,4 +110,20 @@ return [
 
     'slug_already_exists' => 'Este slug já está em uso. Por favor, escolha um diferente.',
     'validation_error' => 'Ocorreu um erro de validação.',
+
+    'style_editor' => 'Editor de Estilo',
+    'visual_style' => 'Estilo Visual',
+    'font_family' => 'Fonte',
+    'primary_color' => 'Cor Primária',
+    'secondary_color' => 'Cor Secundária',
+    'background_color' => 'Cor de Fundo',
+    'text_color' => 'Cor do Texto',
+    'border_radius' => 'Raio da Borda',
+    'shadow' => 'Sombra',
+    'spacing' => 'Espaçamento',
+    'preview' => 'Pré-visualização',
+    'sample_button' => 'Botão Exemplo',
+    'sample_text' => 'Texto Exemplo',
+    'apply_styles' => 'Aplicar Estilos',
+    'styles_applied' => 'Estilos aplicados com sucesso!',
 ];

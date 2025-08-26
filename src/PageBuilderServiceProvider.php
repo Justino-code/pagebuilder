@@ -78,15 +78,15 @@ class PageBuilderServiceProvider extends ServiceProvider
     }
     
     protected function registerLivewireComponents()
-{
-    Livewire::component('page-builder-editor', Http\Livewire\PageBuilderEditor::class);
-    Livewire::component('page-builder-block', Http\Livewire\PageBuilderBlock::class);
-    Livewire::component('media-library', Http\Livewire\MediaLibrary::class);
-    Livewire::component('page-manager', Http\Livewire\PageManager::class);
-    Livewire::component('template-editor', Http\Livewire\TemplateEditor::class);
-    Livewire::component('template-manager', Http\Livewire\TemplateManager::class);
-    Livewire::component('language-selector', Http\Livewire\LanguageSelector::class);
-}
-
+    {
+        Livewire::component('page-builder-editor', Http\Livewire\PageBuilderEditor::class);
+        Livewire::component('page-builder-block', Http\Livewire\PageBuilderBlock::class);
+        Livewire::component('media-library', Http\Livewire\MediaLibrary::class);
+        Livewire::component('page-manager', Http\Livewire\PageManager::class);
+        Livewire::component('template-editor', Http\Livewire\TemplateEditor::class);
+        Livewire::component('template-manager', Http\Livewire\TemplateManager::class);
+        Livewire::component('language-selector', Http\Livewire\LanguageSelector::class);
+        Livewire::component('style-editor', \Justino\PageBuilder\Http\Livewire\StyleEditor::class);
+    }
 
 }
