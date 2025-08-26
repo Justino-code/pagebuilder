@@ -6,7 +6,8 @@
     "keywords": ["laravel", "livewire", "page builder", "drag and drop", "cms"],
     "autoload": {
         "psr-4": {
-            "Justino\\PageBuilder\\": "src/"
+            "Justino\\PageBuilder\\": "src/",
+            "Justino\\PageBuilder\\DTOs\\": "src/DTOs/"
         }
     },
     "autoload-dev": {

@@ -5,14 +5,13 @@ namespace Justino\PageBuilder\Http\Livewire;
 use Livewire\Component;
 use Justino\PageBuilder\Services\JsonPageStorage;
 use Justino\PageBuilder\Helpers\Translator;
+use Justino\PageBuilder\DTOs\PageData;
 
 class PageManager extends Component
 {
     public $pages = [];
     public $showDeleteModal = false;
     public $pageToDelete = null;
-    
-    protected $listeners = ['pageSaved', 'pageDeleted'];
     
     public function mount()
     {
@@ -55,42 +54,39 @@ class PageManager extends Component
         }
     }
     
-    public function togglePublish($slug)
-    {
-        $storage = app(JsonPageStorage::class);
-        $page = $storage->find($slug, 'page');
+    
+public function togglePublish($slug)
+{
+    $storage = app(JsonPageStorage::class);
+    $page = $storage->find($slug, 'page');
+    
+    if ($page instanceof PageData) {
+        // Criar novo DTO com dados atualizados
+        $updatedPage = new PageData(
+            title: $page->title,
+            slug: $page->slug,
+            content: $page->content,
+            published: !$page->published,
+            headerEnabled: $page->headerEnabled,
+            footerEnabled: $page->footerEnabled,
+            customCss: $page->customCss,
+            customJs: $page->customJs,
+            createdAt: $page->createdAt
+        );
         
-        if ($page) {
-            $page['published'] = !($page['published'] ?? false);
-            $page['updated_at'] = now()->toISOString();
-            
-            $storage->save($page);
-            $this->loadPages();
-            
-            $message = $page['published'] 
-                ? Translator::trans('page_published')
-                : Translator::trans('page_unpublished');
-                
-            session()->flash('message', $message);
-        }
-    }
-    
-    public function pageSaved($slug)
-    {
+        $storage->savePage($updatedPage);
         $this->loadPages();
-        session()->flash('message', Translator::trans('page_updated'));
+        
+        $message = $updatedPage->published 
+            ? Translator::trans('page_published')
+            : Translator::trans('page_unpublished');
+            
+        session()->flash('message', $message);
     }
-    
-    public function pageDeleted()
-    {
-        $this->loadPages();
-        session()->flash('message', Translator::trans('page_deleted'));
-    }
+}
     
     public function render()
     {
-        return view('pagebuilder::livewire.page-manager', [
-            'pages' => $this->pages
-        ]);
+        return view('pagebuilder::livewire.page-manager');
     }
 }

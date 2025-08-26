@@ -99,4 +99,15 @@ return [
     'add_custom_css' => 'Add custom CSS here...',
     'enable_header' => 'Enable Header',
     'enable_footer' => 'Enable Footer',
+
+    'click_block_to_start' => 'Click on a block type to get started',
+    'add_custom_js' => 'Add custom JavaScript here...',
+    'page_settings' => 'Page Settings',
+    'publish_page' => 'Publish this page',
+    'danger_zone' => 'Danger Zone',
+    'delete_page' => 'Delete Page',
+    'saving' => 'Saving',
+
+    'slug_already_exists' => 'Este slug já está em uso. Por favor, escolha um diferente.',
+    'validation_error' => 'Ocorreu um erro de validação.',
 ];

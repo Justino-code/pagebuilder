@@ -4,6 +4,7 @@ namespace Justino\PageBuilder\Http\Controllers;
 
 use Justino\PageBuilder\Services\JsonPageStorage;
 use Justino\PageBuilder\Services\BlockManager;
+use Justino\PageBuilder\DTOs\PageData;
 
 class PageController extends Controller
 {
@@ -14,11 +15,10 @@ class PageController extends Controller
         
         $page = $storage->find($slug, 'page');
         
-        if (!$page || !($page['published'] ?? false)) {
-            abort(404, 'Página não encontrada');
+        if (!$page instanceof PageData || !$page->published) {
+            abort(404);
         }
         
-        // Obter header e footer padrão
         $header = $storage->getDefault('header');
         $footer = $storage->getDefault('footer');
         
@@ -32,11 +32,10 @@ class PageController extends Controller
         
         $page = $storage->find($slug, 'page');
         
-        if (!$page) {
-            abort(404, 'Página não encontrada');
+        if (!$page instanceof PageData) {
+            abort(404);
         }
         
-        // Para preview, mostramos mesmo não publicado
         $header = $storage->getDefault('header');
         $footer = $storage->getDefault('footer');
         

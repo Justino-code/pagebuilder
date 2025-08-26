@@ -83,7 +83,8 @@
                     @elseif($field['type'] === 'select')
                         <select 
                             wire:model="block.data.{{ $fieldName }}"
-                            class="w-full p-2 border rounded">
+                            class="w-full p-2 border rounded"
+                        >
                             @foreach($field['options'] as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach

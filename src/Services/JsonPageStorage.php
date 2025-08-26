@@ -3,6 +3,10 @@
 namespace Justino\PageBuilder\Services;
 
 use Illuminate\Support\Facades\File;
+use Justino\PageBuilder\DTOs\{
+    PageData,
+    TemplateData,
+};
 
 class JsonPageStorage
 {
@@ -27,9 +31,8 @@ class JsonPageStorage
                 $content = File::get($file->getPathname());
                 $data = json_decode($content, true);
                 
-                // Filtrar por tipo se especificado
                 if (!$type || ($data['type'] ?? 'page') === $type) {
-                    $items[] = $data;
+                    $items[] = $this->createDtoFromData($data);
                 }
             }
         }
@@ -37,7 +40,7 @@ class JsonPageStorage
         return $items;
     }
     
-    public function find(string $slug, string $type = null): ?array
+    public function find(string $slug, string $type = null)
     {
         $filePath = $this->storagePath . '/' . $slug . '.json';
         
@@ -47,21 +50,31 @@ class JsonPageStorage
         
         $data = json_decode(File::get($filePath), true);
         
-        // Verificar tipo se especificado
         if ($type && ($data['type'] ?? 'page') !== $type) {
             return null;
         }
         
-        return $data;
+        return $this->createDtoFromData($data);
     }
     
     public function save(array $data): bool
     {
-        $type = $data['type'] ?? 'page';
-        $slug = $data['slug'] ?? $this->generateSlug($data, $type);
-        $filePath = $this->storagePath . '/' . $slug . '.json';
+        $dto = $this->createDtoFromData($data);
+        $filePath = $this->storagePath . '/' . $dto->slug . '.json';
         
-        return File::put($filePath, json_encode($data, JSON_PRETTY_PRINT));
+        return File::put($filePath, json_encode($dto->toArray(), JSON_PRETTY_PRINT));
+    }
+    
+    public function savePage(PageData $pageData): bool
+    {
+        $filePath = $this->storagePath . '/' . $pageData->slug . '.json';
+        return File::put($filePath, $pageData->toJson());
+    }
+    
+    public function saveTemplate(TemplateData $templateData): bool
+    {
+        $filePath = $this->storagePath . '/' . $templateData->slug . '.json';
+        return File::put($filePath, $templateData->toJson());
     }
     
     public function delete(string $slug): bool
@@ -75,12 +88,12 @@ class JsonPageStorage
         return false;
     }
     
-    public function getDefault(string $type): ?array
+    public function getDefault(string $type)
     {
         $items = $this->all($type);
         
         foreach ($items as $item) {
-            if ($item['is_default'] ?? false) {
+            if ($item->isDefault ?? false) {
                 return $item;
             }
         }
@@ -88,12 +101,23 @@ class JsonPageStorage
         return count($items) > 0 ? $items[0] : null;
     }
     
+    protected function createDtoFromData(array $data)
+    {
+        $type = $data['type'] ?? 'page';
+        
+        if ($type === 'page') {
+            return PageData::fromArray($data);
+        }
+        
+        return TemplateData::fromArray($data);
+    }
+    
     protected function generateSlug(array $data, string $type): string
     {
         if ($type === 'page') {
-            return \Illuminate\Support\Str::slug($data['title']);
+            return \Illuminate\Support\Str::slug($data['title'] ?? 'untitled');
         }
         
-        return $type . '_' . ($data['name'] ? \Illuminate\Support\Str::slug($data['name']) : uniqid());
+        return $type . '_' . (\Illuminate\Support\Str::slug($data['name'] ?? '') ?: uniqid());
     }
 }

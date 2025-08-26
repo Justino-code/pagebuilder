@@ -99,4 +99,15 @@ return [
     'add_custom_css' => 'Adicione CSS personalizado aqui...',
     'enable_header' => 'Habilitar Cabeçalho',
     'enable_footer' => 'Habilitar Rodapé',
+
+    'click_block_to_start' => 'Clique em um tipo de bloco para começar',
+    'add_custom_js' => 'Adicione JavaScript personalizado aqui...',
+    'page_settings' => 'Configurações da Página',
+    'publish_page' => 'Publicar esta página',
+    'danger_zone' => 'Zona de Perigo',
+    'delete_page' => 'Excluir Página',
+    'saving' => 'Salvando',
+
+    'slug_already_exists' => 'Este slug já está em uso. Por favor, escolha um diferente.',
+    'validation_error' => 'Ocorreu um erro de validação.',
 ];

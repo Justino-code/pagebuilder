@@ -5,6 +5,7 @@ namespace Justino\PageBuilder\Http\Livewire;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\On;
 
 class MediaLibrary extends Component
 {
@@ -42,9 +43,8 @@ class MediaLibrary extends Component
     public function confirmSelection()
     {
         if ($this->selectedImage) {
-            $this->emit('mediaSelected', $this->selectedImage);
+            $this->dispatch('media-selected', url: $this->selectedImage);
             $this->selectedImage = null;
-            $this->dispatchBrowserEvent('close-media-library');
         }
     }
     
@@ -65,8 +65,12 @@ class MediaLibrary extends Component
         $this->uploadedImages = [];
         $this->showUploadModal = false;
         $this->loadImages();
-        
-        session()->flash('message', 'Images uploaded successfully.');
+    }
+    
+    #[On('open-media-library')]
+    public function handleOpenMediaLibrary($field = null)
+    {
+        $this->loadImages();
     }
     
     public function getFilteredImages()

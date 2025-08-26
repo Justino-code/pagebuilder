@@ -4,16 +4,14 @@ namespace Justino\PageBuilder\Http\Livewire;
 
 use Livewire\Component;
 use Justino\PageBuilder\Services\JsonPageStorage;
-use Justino\PageBuilder\Services\BlockManager;
+use Justino\PageBuilder\Helpers\Translator;
 
 class TemplateManager extends Component
 {
     public $templates = [];
     public $templateType = 'header';
-    public $editingTemplate = null;
-    public $showEditor = false;
-    
-    protected $listeners = ['templateSaved' => 'loadTemplates'];
+    public $showDeleteModal = false;
+    public $templateToDelete = null;
     
     public function mount($type = 'header')
     {
@@ -23,47 +21,68 @@ class TemplateManager extends Component
     
     public function loadTemplates()
     {
-        $this->templates = app(JsonPageStorage::class)->all($this->templateType);
+        $storage = app(JsonPageStorage::class);
+        $this->templates = $storage->all($this->templateType);
     }
     
     public function createTemplate()
     {
-        $blockManager = app(BlockManager::class);
-        $blockClass = $blockManager->getBlockClass($this->templateType);
-        
-        if ($blockClass) {
-            $this->editingTemplate = array_merge(
-                ['type' => $this->templateType],
-                $blockClass::defaults()
-            );
-            $this->showEditor = true;
-        }
+        return redirect()->route('pagebuilder.templates.edit', [
+            'type' => $this->templateType
+        ]);
     }
     
     public function editTemplate($slug)
     {
-        $this->editingTemplate = app(JsonPageStorage::class)->find($slug, $this->templateType);
-        $this->showEditor = true;
+        return redirect()->route('pagebuilder.templates.edit', [
+            'type' => $this->templateType,
+            'slug' => $slug
+        ]);
     }
     
-    public function deleteTemplate($slug)
+    public function confirmDelete($slug)
     {
-        app(JsonPageStorage::class)->delete($slug);
-        $this->loadTemplates();
-        session()->flash('message', 'Template deleted successfully.');
+        $this->templateToDelete = $slug;
+        $this->showDeleteModal = true;
+    }
+    
+    public function deleteTemplate()
+    {
+        if ($this->templateToDelete) {
+            $storage = app(JsonPageStorage::class);
+            $storage->delete($this->templateToDelete);
+            
+            $this->showDeleteModal = false;
+            $this->templateToDelete = null;
+            $this->loadTemplates();
+            
+            session()->flash('message', Translator::trans('template_deleted'));
+        }
     }
     
     public function setDefault($slug)
     {
-        $templates = $this->templates;
+        $storage = app(JsonPageStorage::class);
         
-        foreach ($templates as &$template) {
-            $template['is_default'] = ($template['slug'] === $slug);
-            app(JsonPageStorage::class)->save($template);
+        // Remover default de todos os templates
+        $templates = $storage->all($this->templateType);
+        foreach ($templates as $template) {
+            if ($template['is_default'] ?? false) {
+                $template['is_default'] = false;
+                $storage->save($template);
+            }
         }
         
-        $this->loadTemplates();
-        session()->flash('message', 'Default template set successfully.');
+        // Definir novo template como default
+        $template = $storage->find($slug, $this->templateType);
+        if ($template) {
+            $template['is_default'] = true;
+            $template['updated_at'] = now()->toISOString();
+            $storage->save($template);
+            
+            $this->loadTemplates();
+            session()->flash('message', Translator::trans('template_set_default'));
+        }
     }
     
     public function render()

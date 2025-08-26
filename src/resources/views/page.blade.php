@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $page->title }}</title>
+    <title>{{ $page->title ?? '' }}</title>
     
     @if(config('pagebuilder.ui.css_framework') === 'tailwind')
         <script src="https://cdn.tailwindcss.com"></script>
@@ -12,11 +12,11 @@
     @endif
     
     <style>
-        {!! $page->custom_css !!}
+        {!! $page->customCss !!}
     </style>
 </head>
 <body class="bg-white">
-    @if($page->header_enabled)
+    @if($page->headerEnabled)
         @php
             $headerStorage = app('Justino\PageBuilder\Services\JsonPageStorage');
             $header = $headerStorage->getDefault('header');
@@ -45,7 +45,7 @@
         @endforeach
     </main>
     
-    @if($page->footer_enabled)
+    @if($page->footerEnabled)
         @php
             $footerStorage = app('Justino\PageBuilder\Services\JsonPageStorage');
             $footer = $footerStorage->getDefault('footer');
@@ -62,7 +62,7 @@
     @endif
     
     <script>
-        {!! $page->custom_js !!}
+        {!! $page->customJs !!}
     </script>
 </body>
 </html>

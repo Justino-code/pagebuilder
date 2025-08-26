@@ -5,7 +5,7 @@
     @if(isset($pageData) && isset($pageSlug))
         <livewire:page-builder-editor 
             :pageSlug="$pageSlug" 
-            :pageData="$pageData" 
+            :pageData="$pageData->toArray()" 
         />
     @else
         <livewire:page-builder-editor />

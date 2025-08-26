@@ -1,10 +1,11 @@
 <?php
 
-namespace Meu\PageBuilder\Http\Livewire;
+namespace Justino\PageBuilder\Http\Livewire;
 
 use Livewire\Component;
-use Meu\PageBuilder\Services\BlockManager;
-use Meu\PageBuilder\Helpers\Translator;
+use Justino\PageBuilder\Services\BlockManager;
+use Justino\PageBuilder\Helpers\Translator;
+use Livewire\Attributes\On;
 
 class PageBuilderBlock extends Component
 {
@@ -17,18 +18,11 @@ class PageBuilderBlock extends Component
     public $blockSchema = [];
     public $mediaFieldActive = null;
     
-    protected $listeners = [
-        'mediaSelected' => 'handleMediaSelected',
-        'openMediaLibrary' => 'openMediaLibraryForField'
-    ];
-    
     public function mount($index, $block, $isSelected = false)
     {
         $this->index = $index;
         $this->block = $block;
         $this->isSelected = $isSelected;
-        
-        // Carregar metadata do bloco
         $this->loadBlockMetadata();
     }
     
@@ -60,83 +54,66 @@ class PageBuilderBlock extends Component
     
     public function save()
     {
-        $this->emit('blockUpdated', $this->index, $this->block['data']);
+        $this->dispatch('block-updated', index: $this->index, data: $this->block['data']);
         $this->editing = false;
-        $this->dispatchBrowserEvent('block-saved', [
-            'message' => Translator::trans('block_updated')
-        ]);
     }
     
-    public function cancelEdit()
+    public function cancel()
     {
         $this->editing = false;
-        // Recarregar dados originais se necessário
         $this->loadBlockMetadata();
     }
     
     public function remove()
     {
-        $this->emit('blockRemoved', $this->index);
-        $this->dispatchBrowserEvent('block-removed', [
-            'message' => Translator::trans('block_removed')
-        ]);
+        $this->dispatch('block-removed', index: $this->index);
     }
     
     public function moveUp()
     {
         if ($this->index > 0) {
-            $this->emit('blockMoved', $this->index, $this->index - 1);
+            $this->dispatch('block-moved', fromIndex: $this->index, toIndex: $this->index - 1);
         }
     }
     
     public function moveDown()
     {
-        $this->emit('blockMoved', $this->index, $this->index + 1);
+        $this->dispatch('block-moved', fromIndex: $this->index, toIndex: $this->index + 1);
     }
     
-    public function duplicate()
-    {
-        $this->emit('blockDuplicated', $this->index, $this->block);
-    }
-    
-    public function handleMediaSelected($url)
-    {
-        if ($this->mediaFieldActive) {
-            $this->block['data'][$this->mediaFieldActive] = $url;
-            $this->mediaFieldActive = null;
-            $this->emit('blockUpdated', $this->index, $this->block['data']);
-            
-            $this->dispatchBrowserEvent('media-selected', [
-                'message' => Translator::trans('media_selected')
-            ]);
-        }
-    }
-    
-    public function openMediaLibraryForField($fieldName = null)
+    public function openMediaLibraryForField($fieldName)
     {
         $this->mediaFieldActive = $fieldName;
-        $this->emit('openMediaLibrary');
+        $this->dispatch('open-media-library', field: $fieldName);
     }
     
-    public function clearField($fieldName)
+    #[On('media-selected')]
+    public function handleMediaSelected($url)
     {
-        if (isset($this->block['data'][$fieldName])) {
-            $this->block['data'][$fieldName] = null;
-            $this->emit('blockUpdated', $this->index, $this->block['data']);
+        if ($this->mediaFieldActive && $this->editing) {
+            $fieldPath = $this->mediaFieldActive;
+            $keys = explode('.', $fieldPath);
+            
+            if (count($keys) === 1) {
+                // Campo simples
+                $this->block['data'][$keys[0]] = $url;
+            } elseif (count($keys) === 3) {
+                // Campo em repeater (ex: gallery.0.image)
+                list($parent, $index, $field) = $keys;
+                if (isset($this->block['data'][$parent][$index])) {
+                    $this->block['data'][$parent][$index][$field] = $url;
+                }
+            }
+            
+            $this->mediaFieldActive = null;
+            $this->dispatch('block-updated', index: $this->index, data: $this->block['data']);
         }
     }
     
-    public function updateField($fieldName, $value)
+    public function updated($property, $value)
     {
-        $this->block['data'][$fieldName] = $value;
-        $this->emit('blockUpdated', $this->index, $this->block['data']);
-    }
-    
-    public function updateRepeaterField($fieldName, $index, $subFieldName, $value)
-    {
-        if (isset($this->block['data'][$fieldName][$index][$subFieldName])) {
-            $this->block['data'][$fieldName][$index][$subFieldName] = $value;
-            $this->emit('blockUpdated', $this->index, $this->block['data']);
+        if (str_starts_with($property, 'block.data.') && $this->editing) {
+            $this->dispatch('block-updated', index: $this->index, data: $this->block['data']);
         }
     }
     
@@ -150,8 +127,12 @@ class PageBuilderBlock extends Component
                 $newItem[$subFieldName] = $subField['default'] ?? null;
             }
             
+            if (!isset($this->block['data'][$fieldName])) {
+                $this->block['data'][$fieldName] = [];
+            }
+            
             $this->block['data'][$fieldName][] = $newItem;
-            $this->emit('blockUpdated', $this->index, $this->block['data']);
+            $this->dispatch('block-updated', index: $this->index, data: $this->block['data']);
         }
     }
     
@@ -159,100 +140,15 @@ class PageBuilderBlock extends Component
     {
         if (isset($this->block['data'][$fieldName][$index])) {
             array_splice($this->block['data'][$fieldName], $index, 1);
-            $this->emit('blockUpdated', $this->index, $this->block['data']);
+            $this->dispatch('block-updated', index: $this->index, data: $this->block['data']);
         }
     }
     
-    public function moveRepeaterItemUp($fieldName, $index)
+    public function clearField($fieldName)
     {
-        if ($index > 0 && isset($this->block['data'][$fieldName][$index])) {
-            $item = $this->block['data'][$fieldName][$index];
-            array_splice($this->block['data'][$fieldName], $index, 1);
-            array_splice($this->block['data'][$fieldName], $index - 1, 0, [$item]);
-            $this->emit('blockUpdated', $this->index, $this->block['data']);
-        }
-    }
-    
-    public function moveRepeaterItemDown($fieldName, $index)
-    {
-        if (isset($this->block['data'][$fieldName][$index + 1])) {
-            $item = $this->block['data'][$fieldName][$index];
-            array_splice($this->block['data'][$fieldName], $index, 1);
-            array_splice($this->block['data'][$fieldName], $index + 1, 0, [$item]);
-            $this->emit('blockUpdated', $this->index, $this->block['data']);
-        }
-    }
-    
-    public function applyStyle($styleProperty, $value)
-    {
-        if (!isset($this->block['styles'])) {
-            $this->block['styles'] = [];
-        }
-        
-        $this->block['styles'][$styleProperty] = $value;
-        $this->emit('blockStylesUpdated', $this->index, $this->block['styles']);
-    }
-    
-    public function resetStyles()
-    {
-        $this->block['styles'] = [];
-        $this->emit('blockStylesUpdated', $this->index, []);
-    }
-    
-    public function updatedBlock($value, $key)
-    {
-        $keys = explode('.', $key);
-        
-        if (count($keys) >= 2 && $keys[0] === 'data') {
-            $this->emit('blockUpdated', $this->index, $this->block['data']);
-        }
-    }
-    
-    public function showPreview()
-    {
-        $this->dispatchBrowserEvent('show-block-preview', [
-            'blockType' => $this->block['type'],
-            'blockData' => $this->block['data']
-        ]);
-    }
-    
-    public function exportBlock()
-    {
-        $blockData = [
-            'type' => $this->block['type'],
-            'data' => $this->block['data'],
-            'styles' => $this->block['styles'] ?? []
-        ];
-        
-        $this->dispatchBrowserEvent('export-block', [
-            'data' => json_encode($blockData, JSON_PRETTY_PRINT),
-            'filename' => $this->block['type'] . '-block.json'
-        ]);
-    }
-    
-    public function importBlock($jsonData)
-    {
-        try {
-            $importedData = json_decode($jsonData, true);
-            
-            if (json_last_error() === JSON_ERROR_NONE && 
-                isset($importedData['type']) && 
-                $importedData['type'] === $this->block['type']) {
-                
-                $this->block['data'] = $importedData['data'] ?? [];
-                $this->block['styles'] = $importedData['styles'] ?? [];
-                
-                $this->emit('blockUpdated', $this->index, $this->block['data']);
-                $this->emit('blockStylesUpdated', $this->index, $this->block['styles']);
-                
-                $this->dispatchBrowserEvent('block-imported', [
-                    'message' => Translator::trans('block_imported')
-                ]);
-            }
-        } catch (\Exception $e) {
-            $this->dispatchBrowserEvent('import-error', [
-                'message' => Translator::trans('import_error')
-            ]);
+        if (isset($this->block['data'][$fieldName])) {
+            $this->block['data'][$fieldName] = null;
+            $this->dispatch('block-updated', index: $this->index, data: $this->block['data']);
         }
     }
 }

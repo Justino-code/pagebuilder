@@ -7,6 +7,10 @@ use Livewire\WithFileUploads;
 use Justino\PageBuilder\Services\JsonPageStorage;
 use Justino\PageBuilder\Services\BlockManager;
 use Justino\PageBuilder\Helpers\Translator;
+use Justino\PageBuilder\Rules\UniquePageSlug;
+use Livewire\Attributes\On;
+
+use Justino\PageBuilder\DTOs\PageData;
 
 class PageBuilderEditor extends Component
 {
@@ -29,12 +33,12 @@ class PageBuilderEditor extends Component
     public $activeTab = 'content';
     public $selectedBlockIndex = null;
     public $showMediaLibrary = false;
-    
+    public $mediaFieldActive = null;
+
     protected $listeners = [
-        'blockUpdated', 'blockRemoved', 'blockMoved', 
-        'mediaSelected', 'savePage', 'deletePage'
+        'mediaSelected'
     ];
-    
+
     public function mount($pageSlug = null, $pageData = [])
     {
         $this->pageSlug = $pageSlug;
@@ -56,54 +60,54 @@ class PageBuilderEditor extends Component
         $this->headerEnabled = $pageData['header_enabled'] ?? true;
         $this->footerEnabled = $pageData['footer_enabled'] ?? true;
     }
+
+public function save()
+{
+    $this->validate([
+        'title' => 'required|string|max:255',
+        'slug' => [
+            'required',
+            'alpha_dash',
+            new UniquePageSlug('page', $this->pageSlug)
+        ],
+    ]);
     
-    public function save()
-    {
-        $this->validate([
-            'title' => 'required|string|max:255',
-            'slug' => 'required|alpha_dash|unique_page_slug:page,' . $this->pageSlug,
-        ]);
-        
-        $storage = app(JsonPageStorage::class);
-        
-        $pageData = [
-            'type' => 'page',
-            'title' => $this->title,
-            'slug' => $this->slug,
-            'content' => $this->content,
-            'published' => $this->published,
-            'custom_css' => $this->customCss,
-            'custom_js' => $this->customJs,
-            'header_enabled' => $this->headerEnabled,
-            'footer_enabled' => $this->footerEnabled,
-            'updated_at' => now()->toISOString()
-        ];
-        
-        if ($this->isNew) {
-            $pageData['created_at'] = now()->toISOString();
+    $storage = app(JsonPageStorage::class);
+    
+    // Criar DTO
+    $pageData = new PageData(
+        title: $this->title,
+        slug: $this->slug,
+        content: $this->content,
+        published: $this->published,
+        headerEnabled: $this->headerEnabled,
+        footerEnabled: $this->footerEnabled,
+        customCss: $this->customCss,
+        customJs: $this->customJs
+    );
+    
+    // Salvar usando DTO
+    $storage->savePage($pageData);
+    
+    if ($this->pageSlug !== $this->slug) {
+        if ($this->pageSlug) {
+            $storage->delete($this->pageSlug);
         }
         
-        $storage->save($pageData);
-        
-        // Se o slug mudou, redirecionar
-        if ($this->pageSlug !== $this->slug) {
-            $this->pageSlug = $this->slug;
-            $this->isNew = false;
-            return redirect()->route('pagebuilder.pages.edit', $this->slug);
-        }
-        
+        $this->pageSlug = $this->slug;
         $this->isNew = false;
-        $this->emit('pageSaved', $this->slug);
-        session()->flash('message', Translator::trans('page_updated'));
+        return redirect()->route('pagebuilder.pages.edit', $this->slug);
     }
+    
+    $this->isNew = false;
+    session()->flash('message', Translator::trans('page_updated'));
+}
     
     public function delete()
     {
         if ($this->pageSlug) {
             $storage = app(JsonPageStorage::class);
             $storage->delete($this->pageSlug);
-            
-            $this->emit('pageDeleted');
             return redirect()->route('pagebuilder.pages.index');
         }
     }
@@ -124,6 +128,7 @@ class PageBuilderEditor extends Component
         }
     }
     
+    #[On('block-updated')]
     public function onBlockUpdated($index, $data)
     {
         if (isset($this->content[$index])) {
@@ -131,6 +136,7 @@ class PageBuilderEditor extends Component
         }
     }
     
+    #[On('block-removed')]
     public function onBlockRemoved($index)
     {
         if (isset($this->content[$index])) {
@@ -139,11 +145,14 @@ class PageBuilderEditor extends Component
         }
     }
     
+    #[On('block-moved')]
     public function onBlockMoved($fromIndex, $toIndex)
     {
-        $block = $this->content[$fromIndex];
-        array_splice($this->content, $fromIndex, 1);
-        array_splice($this->content, $toIndex, 0, [$block]);
+        if (isset($this->content[$fromIndex]) && isset($this->content[$toIndex])) {
+            $block = $this->content[$fromIndex];
+            array_splice($this->content, $fromIndex, 1);
+            array_splice($this->content, $toIndex, 0, [$block]);
+        }
     }
     
     public function selectBlock($index)
@@ -151,14 +160,29 @@ class PageBuilderEditor extends Component
         $this->selectedBlockIndex = $index;
     }
     
-    public function openMediaLibrary()
+    public function openMediaLibrary($field = null)
     {
+        $this->mediaFieldActive = $field;
         $this->showMediaLibrary = true;
     }
+
+    #[On('open-media-library')]
+public function handleOpenMediaLibrary($field)
+{
+    $this->mediaFieldActive = $field;
+    $this->showMediaLibrary = true;
+}
     
-    public function onMediaSelected($url)
+    #[On('media-selected')]
+    public function mediaSelected($url)
     {
-        $this->emitTo('page-builder-block', 'mediaSelected', $url);
+        if ($this->mediaFieldActive) {
+            // Encontrar o bloco ativo e atualizar o campo de mídia
+            if ($this->selectedBlockIndex !== null && isset($this->content[$this->selectedBlockIndex])) {
+                $this->content[$this->selectedBlockIndex]['data'][$this->mediaFieldActive] = $url;
+            }
+            $this->mediaFieldActive = null;
+        }
         $this->showMediaLibrary = false;
     }
     
