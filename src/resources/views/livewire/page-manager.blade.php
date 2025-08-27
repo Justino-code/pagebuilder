@@ -12,9 +12,10 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @php //dd($pages); @endphp
                     @foreach($pages as $page)
                         <tr class="border-t">
-                            <td class="px-4 py-3">{{ $page['title'] }}</td>
+                            <td class="px-4 py-3">{{ $page['title'] }}</td> <!-- CORRETO: sintaxe de array -->
                             <td class="px-4 py-3">{{ $page['slug'] }}</td>
                             <td class="px-4 py-3">
                                 <span class="px-2 py-1 text-xs rounded {{ $page['published'] ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
