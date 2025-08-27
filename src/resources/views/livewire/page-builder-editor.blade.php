@@ -26,9 +26,6 @@
             <div class="mb-6">
                 <h3 class="font-medium mb-2">{{ __('pagebuilder::messages.blocks') }}</h3>
                 <div class="grid grid-cols-2 gap-2">
-
-                    @php  dd($availableBlocks);  @endphp
-
                     @foreach($availableBlocks as $block)
                         <button 
                             wire:click="addBlock('{{ $block['type'] }}')"
@@ -36,7 +33,7 @@
                             title="{{ $block['label'] }}"
                         >
                             <div class="text-2xl mb-1">{{ $block['icon'] }}</div>
-                            <div class="text-xs">{{ Str::limit($block['label'], 10) }}</div>
+                            <div class="text-xs">{{ __('pagebuilder::messages.'.$block['label']) }}</div>
                         </button>
                     @endforeach
                 </div>

@@ -9,14 +9,14 @@
         <div class="grid grid-cols-1 md:grid-cols-{{ count($sections) }} gap-8 mb-8">
             @foreach($sections as $section)
                 <div class="footer-section">
-                    <h4 class="font-semibold mb-4">{{ $section['title'] }}</h4>
+                    <h4 class="font-semibold mb-4">{{ __($section['title']) }}</h4>
                     <ul class="space-y-2">
                         @foreach($section['links'] as $link)
                             <li>
                                 <a href="{{ $link['url'] }}" 
                                    class="footer-link hover:underline"
                                    style="color: {{ $styles['link_color'] ?? '#007bff' }};">
-                                    {{ $link['label'] }}
+                                    {{ __($link['label']) }}
                                 </a>
                             </li>
                         @endforeach
@@ -26,7 +26,7 @@
         </div>
         
         <div class="border-t border-gray-300 pt-6 text-center">
-            <p class="copyright-text">{{ $copyright }}</p>
+            <p class="copyright-text">{{ __($copyright) }}</p>
         </div>
     </div>
 </footer>

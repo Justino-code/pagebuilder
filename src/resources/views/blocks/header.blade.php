@@ -14,11 +14,11 @@
                     <a href="/" class="logo-text" 
                        style="color: {{ $logo['styles']['color'] ?? '#000000' }};
                               font-size: {{ $logo['styles']['font_size'] ?? '24px' }};">
-                        {{ $logo['text'] ?? 'My Website' }}
+                        {{ __($logo['text'] ?? 'pagebuilder::messages.my_website') }}
                     </a>
                 @else
                     <a href="/" class="logo-image">
-                        <img src="{{ $logo['image'] }}" alt="{{ $logo['text'] ?? 'Logo' }}" 
+                        <img src="{{ $logo['image'] }}" alt="{{ __($logo['text'] ?? 'pagebuilder::messages.logo') }}" 
                              style="max-height: 50px;">
                     </a>
                 @endif
@@ -33,7 +33,7 @@
                                class="menu-item hover:opacity-75 transition"
                                style="color: {{ $item['styles']['color'] ?? '#333333' }};
                                       hover-color: {{ $item['styles']['hover_color'] ?? '#007bff' }};">
-                                {{ $item['label'] }}
+                                {{ __($item['label']) }}
                             </a>
                         </li>
                     @endforeach

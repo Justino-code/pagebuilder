@@ -2,6 +2,8 @@
 
 namespace Justino\PageBuilder\Services;
 
+use Illuminate\Support\Str;
+
 class BlockManager
 {
     protected $blocks = [];
@@ -35,20 +37,22 @@ class BlockManager
             $this->blocks[$blockClass::type()] = $blockClass;
         }
     }
-    
+
     public function getAvailableBlocks(): array
     {
         $blocks = [];
-        
+
         foreach ($this->blocks as $type => $class) {
+            $translationKey = Str::slug($class::label(), '_'); // ex.: "Hero Section" -> "hero_section"
+
             $blocks[] = [
-                'type' => $type,
-                'label' => $class::label(),
-                'icon' => $class::icon(),
+                'type'   => $type,
+                'label'  => $translationKey,
+                'icon'   => $class::icon(),
                 'schema' => $class::schema(),
             ];
         }
-        
+
         return $blocks;
     }
     
