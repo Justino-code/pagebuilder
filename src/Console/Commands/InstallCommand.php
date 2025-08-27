@@ -7,29 +7,39 @@ use Illuminate\Support\Facades\File;
 
 class InstallCommand extends Command
 {
-    protected $signature = 'pagebuilder:install';
+    protected $signature = 'pagebuilder:install {--force : Overwrite existing files}';
     protected $description = 'Install the Page Builder package';
     
     public function handle()
     {
-        $this->info('Installing Page Builder...');
+        $this->info('🚀 Installing Page Builder...');
         
         // Publicar configurações
         $this->call('vendor:publish', [
             '--provider' => 'Justino\PageBuilder\PageBuilderServiceProvider',
-            '--tag' => 'pagebuilder-config'
+            '--tag' => 'pagebuilder-config',
+            '--force' => $this->option('force'),
         ]);
         
         // Publicar views
         $this->call('vendor:publish', [
             '--provider' => 'Justino\PageBuilder\PageBuilderServiceProvider',
-            '--tag' => 'pagebuilder-views'
+            '--tag' => 'pagebuilder-views',
+            '--force' => $this->option('force'),
         ]);
         
+        // Publicar traduções
+        $this->call('vendor:publish', [
+            '--provider' => 'Justino\PageBuilder\PageBuilderServiceProvider',
+            '--tag' => 'pagebuilder-lang',
+            '--force' => $this->option('force'),
+        ]);
+
         // Publicar assets
         $this->call('vendor:publish', [
             '--provider' => 'Justino\PageBuilder\PageBuilderServiceProvider',
-            '--tag' => 'pagebuilder-assets'
+            '--tag' => 'pagebuilder-assets',
+            '--force' => $this->option('force'),
         ]);
         
         // Criar diretórios de armazenamento
@@ -45,7 +55,7 @@ class InstallCommand extends Command
 
         $baseUrl = "http://{$host}:{$port}/" . trim(config('pagebuilder.route.prefix', 'page-builder'), '/');
 
-        $this->info('Page Builder installed successfully!');
-        $this->line("You can now access the page builder at: {$baseUrl}");
+        $this->info('✅ Page Builder installed successfully!');
+        $this->line("👉 You can now access the page builder at: {$baseUrl}");
     }
 }

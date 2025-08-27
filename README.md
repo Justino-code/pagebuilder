@@ -15,6 +15,7 @@ Um construtor de páginas completo com interface drag-and-drop para Laravel, int
 - 🔒 Autenticação baseada em roles
 - 📊 Logs de atividade
 - 🎨 Suporte a TailwindCSS e Bootstrap
+- 🌗 Seletor de Tema (Light/Dark/Sistema)
 
 ## 📦 Instalação
 
@@ -113,8 +114,24 @@ return [
     
     'ui' => [
         'css_framework' => 'tailwind', // ou 'bootstrap'
+        'default_theme' => 'system', // Opções: 'light', 'dark', 'system'
     ],
 ];
+```
+
+### 🌗 Tema (Dark/Light)
+
+O Page Builder vem com um seletor de tema que permite ao usuário escolher entre os modos Light (claro), Dark (escuro) ou seguir a preferência do sistema. A escolha do usuário é salva no `localStorage` do navegador.
+
+#### Tema Padrão
+
+Você pode definir o tema padrão para novos usuários no arquivo `config/pagebuilder.php`:
+
+```php
+'ui' => [
+    // ...
+    'default_theme' => 'system', // Opções: 'light', 'dark', 'system'
+],
 ```
 
 ### Variáveis de Ambiente (.env)
@@ -338,7 +355,7 @@ Este pacote é software open-source licenciado sob a [MIT license](https://opens
 
 ## 🔄 Atualizações
 
-### Versão 1.0.0
+### Versão 0.0.1
 - ✅ Editor visual drag-and-drop
 - ✅ Sistema modular de blocos
 - ✅ Headers e footers editáveis

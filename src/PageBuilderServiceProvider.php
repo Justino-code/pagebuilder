@@ -63,6 +63,7 @@ class PageBuilderServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 \Justino\PageBuilder\Console\Commands\InstallCommand::class,
+                \Justino\PageBuilder\Console\Commands\PublishTranslations::class,
             ]);
         }
     }

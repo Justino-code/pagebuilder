@@ -32,6 +32,7 @@ return [
     'ui' => [
         'css_framework' => env('PAGEBUILDER_CSS_FRAMEWORK', 'tailwind'),
         'theme' => env('PAGEBUILDER_THEME', 'light'),
+        'default_theme' => env('PAGEBUILDER_DEFAULT_THEME', 'system'), // 'light', 'dark', 'system'
     ],
     
     'logging' => [
