@@ -26,6 +26,9 @@
             <div class="mb-6">
                 <h3 class="font-medium mb-2">{{ __('pagebuilder::messages.blocks') }}</h3>
                 <div class="grid grid-cols-2 gap-2">
+
+                    @php  dd($availableBlocks);  @endphp
+
                     @foreach($availableBlocks as $block)
                         <button 
                             wire:click="addBlock('{{ $block['type'] }}')"

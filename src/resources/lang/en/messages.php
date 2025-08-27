@@ -10,6 +10,7 @@ return [
     'upload' => 'Upload',
     'select' => 'Select',
     'confirm_delete' => 'Are you sure you want to delete this?',
+    'page' => 'Page',
     
     // Page Builder
     'page_builder' => 'Page Builder',
@@ -62,6 +63,8 @@ return [
     'style' => 'Style',
     'published' => 'Published',
     'default' => 'Default',
+    'status'     => 'Status',
+    'created_at' => 'Created At',
     
     // Actions
     'actions' => 'Actions',
@@ -153,4 +156,35 @@ return [
     'shadow_intensity' => 'Shadow Intensity',
     'hover_effect' => 'Hover Effect',
     'transition_speed' => 'Transition Speed (ms)',
+
+    'global_settings' => 'Global Settings',
+    'heading_example' => 'Heading Example',
+    'paragraph_example' => 'Paragraph Example',
+    'button_example' => 'Button Example',
+    'reset_global_styles' => 'Reset Global Styles',
+    'typography_settings' => 'Typography Settings',
+    'font_weight' => 'Font Weight',
+    'typography_preview' => 'Typography Preview',
+    'spacing_preview' => 'Spacing Preview',
+    'input_padding' => 'Input Padding',
+    'spacing_settings' => 'Spacing Settings',
+    'border_settings' => 'Border Settings',
+    'border_style' => 'Border Style',
+    'border_preview' => 'Border Preview',
+    'effects_settings' => 'Effects Settings',
+    'effects_preview' => 'Effects Preview',
+    'custom_class_name' => 'Custom Class Name',
+    'generated_css' => 'Generated CSS',
+    'live_preview' => 'Live Preview',
+
+    // Reset options
+    'reset' => 'Reset',
+    'reset_borders' => 'Reset Borders',
+    'reset_custom' => 'Reset Custom',
+    'reset_effects' => 'Reset Effects',
+    'reset_spacing' => 'Reset Spacing',
+    'reset_typography' => 'Reset Typography',
+
+    // 
+    'custom_js' => 'Custom JavaScript',
 ];
