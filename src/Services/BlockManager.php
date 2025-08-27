@@ -43,7 +43,7 @@ class BlockManager
         $blocks = [];
 
         foreach ($this->blocks as $type => $class) {
-            $translationKey = Str::slug($class::label(), '_'); // ex.: "Hero Section" -> "hero_section"
+            $translationKey = $this->getBlockLabelSlug($class::label()); // ex.: "Hero Section" -> "hero_section"
 
             $blocks[] = [
                 'type'   => $type,
@@ -54,6 +54,10 @@ class BlockManager
         }
 
         return $blocks;
+    }
+
+    public function getBlockLabelSlug($blockLabel){
+        return Str::slug($blockLabel, '_'); 
     }
     
     public function getBlockClass($type)

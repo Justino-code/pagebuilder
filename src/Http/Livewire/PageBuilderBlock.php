@@ -32,7 +32,7 @@ class PageBuilderBlock extends Component
         $blockClass = $blockManager->getBlockClass($this->block['type']);
         
         if ($blockClass) {
-            $this->blockLabel = $blockClass::label();
+            $this->blockLabel = $blockManager->getBlockLabelSlug($blockClass::label());
             $this->blockIcon = $blockClass::icon();
             $this->blockSchema = $blockClass::schema();
         }
@@ -40,6 +40,7 @@ class PageBuilderBlock extends Component
     
     public function render()
     {
+
         return view('pagebuilder::livewire.page-builder-block', [
             'blockLabel' => $this->blockLabel,
             'blockIcon' => $this->blockIcon,
