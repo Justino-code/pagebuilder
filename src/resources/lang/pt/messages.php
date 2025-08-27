@@ -9,7 +9,7 @@ return [
     'edit' => 'Editar',
     'delete' => 'Excluir',
     'create' => 'Criar',
-    'upload' => 'Enviar',
+    //'upload' => 'Carregar',
     'select' => 'Selecionar',
     'confirm_delete' => 'Tem certeza que deseja excluir?',
     'page' => 'Página',
@@ -243,6 +243,7 @@ return [
     'contact_us' => 'Contacte-nos',
     'get_in_touch' => 'Entre em contacto connosco',
     'send_message' => 'Enviar Mensagem',
+    'send' => 'Enviar',
     'our_gallery' => 'Nossa Galeria',
     'main_header' => 'Cabeçalho Principal',
     'my_website' => 'Meu Website',
@@ -264,4 +265,20 @@ return [
     'add_cards_content' => 'Adicione conteúdo aos cards',
     'click_to_configure' => 'Clique para configurar',
     'select_option' => 'Selecione uma opção',
+
+
+    // Media Library
+
+    'media_library' => 'Biblioteca de Mídia',
+    'image_selected' => 'Imagem selecionada',
+    'uploading' => 'Enviando...',
+    'upload_success' => 'Imagens enviadas com sucesso',
+    'upload_error' => 'Erro ao enviar imagens',
+
+    'media_library_image' => 'Imagem da Biblioteca de Mídia',
+    'search' => 'Pesquisar',
+    'no_images_found' => 'Nenhuma imagem encontrada.',
+    'upload_first_image' => 'Envie a primeira imagem',
+    'select_image' => 'Selecionar Imagem',
+    'upload_images' => 'Enviar Imagens',
 ];

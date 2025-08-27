@@ -241,6 +241,7 @@ return [
     'contact_us' => 'Contact Us',
     'get_in_touch' => 'Get in touch with us',
     'send_message' => 'Send Message',
+    'send' => 'Send',
     'our_gallery' => 'Our Gallery',
     'main_header' => 'Main Header',
     'my_website' => 'My Website',
@@ -262,4 +263,20 @@ return [
     'add_cards_content' => 'Add cards content',
     'click_to_configure' => 'Click to configure',
     'select_option' => 'Select an option',
+
+
+    // Media Library
+
+    'image_selected' => 'Image selected',
+    'uploading' => 'Uploading...',
+    'upload_success' => 'Images uploaded successfully',
+    'upload_error' => 'Error uploading images',
+
+    'media_library' => 'Media Library',
+    'media_library_image' => 'Media Library Image',
+    'search' => 'Search',
+    'no_images_found' => 'No images found.',
+    'upload_first_image' => 'Upload the first image',
+    'select_image' => 'Select Image',
+    'upload_images' => 'Upload Images',
 ];

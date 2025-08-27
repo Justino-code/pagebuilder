@@ -2,7 +2,7 @@
     <!-- Header -->
     <div class="bg-white border-b p-4">
         <div class="flex justify-between items-center">
-            <h2 class="text-lg font-bold">Media Library</h2>
+            <h2 class="text-lg font-bold">{{ __('pagebuilder::messages.media_library') }}</h2>
             <button wire:click="$emit('close-media-library')" class="text-gray-500 hover:text-gray-700">
                 ✕
             </button>
@@ -12,14 +12,14 @@
             <input 
                 type="text" 
                 wire:model="searchTerm"
-                placeholder="Search images..." 
+                placeholder="{{ __('pagebuilder::messages.search') }}..." 
                 class="flex-1 p-2 border rounded"
             >
             <button 
                 wire:click="$set('showUploadModal', true)"
                 class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
-                Upload
+                {{ __('pagebuilder::messages.upload') }}
             </button>
         </div>
     </div>
@@ -40,7 +40,7 @@
                     >
                         <img 
                             src="{{ $imageUrl }}" 
-                            alt="Media library image" 
+                            alt="{{ __('pagebuilder::messages.media_library_image') }}" 
                             class="w-full h-32 object-cover"
                         >
                         <div class="p-2 text-xs truncate">
@@ -52,12 +52,12 @@
         @else
             <div class="text-center py-12 text-gray-500">
                 <div class="text-4xl mb-4">🖼️</div>
-                <p>No images found.</p>
+                <p>{{ __('pagebuilder::messages.no_images_found') }}</p>
                 <button 
                     wire:click="$set('showUploadModal', true)"
                     class="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                 >
-                    Upload your first image
+                    {{ __('pagebuilder::messages.upload_first_image') }}
                 </button>
             </div>
         @endif
@@ -71,7 +71,7 @@
                 class="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                 {{ !$selectedImage ? 'disabled' : '' }}
             >
-                Select Image
+                {{ __('pagebuilder::messages.select_image') }}
             </button>
         </div>
     </div>
@@ -80,7 +80,7 @@
     @if($showUploadModal)
         <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div class="bg-white rounded-lg w-96 p-6">
-                <h3 class="text-lg font-bold mb-4">Upload Images</h3>
+                <h3 class="text-lg font-bold mb-4">{{ __('pagebuilder::messages.upload_images') }}</h3>
                 
                 <input 
                     type="file" 
@@ -96,13 +96,13 @@
                         wire:click="$set('showUploadModal', false)"
                         class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
                     >
-                        Cancel
+                        {{ __('pagebuilder::messages.cancel') }}
                     </button>
                     <button 
                         wire:click="uploadImages"
                         class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                     >
-                        Upload
+                        {{ __('pagebuilder::messages.upload') }}
                     </button>
                 </div>
             </div>
