@@ -7,6 +7,7 @@
                         <th class="px-4 py-2 text-left">{{ __('pagebuilder::messages.title') }}</th>
                         <th class="px-4 py-2 text-left">{{ __('pagebuilder::messages.slug') }}</th>
                         <th class="px-4 py-2 text-left">{{ __('pagebuilder::messages.status') }}</th>
+                        <th class="px-4 py-2 text-left">{{ __('pagebuilder::messages.created_at') }}</th>
                         <th class="px-4 py-2 text-left">{{ __('pagebuilder::messages.actions') }}</th>
                     </tr>
                 </thead>
@@ -19,6 +20,9 @@
                                 <span class="px-2 py-1 text-xs rounded {{ $page['published'] ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
                                     {{ $page['published'] ? __('pagebuilder::messages.published') : __('pagebuilder::messages.draft') }}
                                 </span>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-600">
+                                {{ \Carbon\Carbon::parse($page['createdAt'])->format('d/m/Y H:i') }}
                             </td>
                             <td class="px-4 py-3">
                                 <div class="flex space-x-2">
@@ -41,7 +45,7 @@
                                     
                                     <button 
                                         wire:click="togglePublish('{{ $page['slug'] }}')"
-                                        class="px-3 py-1 {{ $page['published'] ? 'bg-yellow-500' : 'bg-green-500' }} text-white rounded text-sm"
+                                        class="px-3 py-1 {{ $page['published'] ? 'bg-yellow-500' : 'bg-green-500' }} text-white rounded hover:{{ $page['published'] ? 'bg-yellow-600' : 'bg-green-600' }} text-sm"
                                     >
                                         {{ $page['published'] ? __('pagebuilder::messages.unpublish') : __('pagebuilder::messages.publish') }}
                                     </button>
@@ -71,26 +75,45 @@
 
     <!-- Modal de Confirmação de Exclusão -->
     @if($showDeleteModal)
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white rounded-lg p-6 w-96">
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-lg p-6 w-full max-w-md">
                 <h3 class="text-lg font-bold mb-4">{{ __('pagebuilder::messages.confirm_delete') }}</h3>
                 <p class="mb-4">{{ __('pagebuilder::messages.confirm_delete_page') }}</p>
                 
-                <div class="flex justify-end space-x-2">
+                <div class="flex justify-end space-x-3">
                     <button 
                         wire:click="$set('showDeleteModal', false)"
-                        class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                        class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors"
                     >
                         {{ __('pagebuilder::messages.cancel') }}
                     </button>
                     <button 
                         wire:click="deletePage"
-                        class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                        class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                     >
                         {{ __('pagebuilder::messages.delete') }}
                     </button>
                 </div>
             </div>
         </div>
+    @endif
+
+    <!-- Mensagem de Feedback -->
+    @if(session()->has('message'))
+        <div class="fixed top-4 right-4 z-50">
+            <div class="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
+                {{ session('message') }}
+            </div>
+        </div>
+        
+        <script>
+            // Auto-hide da mensagem após 3 segundos
+            setTimeout(() => {
+                const message = document.querySelector('.fixed.top-4.right-4');
+                if (message) {
+                    message.remove();
+                }
+            }, 3000);
+        </script>
     @endif
 </div>

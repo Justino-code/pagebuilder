@@ -86,7 +86,7 @@ class PageBuilderServiceProvider extends ServiceProvider
         Livewire::component('template-editor', Http\Livewire\TemplateEditor::class);
         Livewire::component('template-manager', Http\Livewire\TemplateManager::class);
         Livewire::component('language-selector', Http\Livewire\LanguageSelector::class);
-        Livewire::component('style-editor', \Justino\PageBuilder\Http\Livewire\StyleEditor::class);
+        Livewire::component('style-editor', \Justino\PageBuilder\Http\Livewire\AdvancedStyleEditor::class);
     }
 
 }

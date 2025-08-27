@@ -47,6 +47,13 @@ class PageBuilderBlock extends Component
         ]);
     }
     
+    // ADICIONE ESTE MÉTODO
+    public function selectBlock()
+    {
+        $this->isSelected = true;
+        $this->dispatch('block-selected', index: $this->index);
+    }
+    
     public function edit()
     {
         $this->editing = true;

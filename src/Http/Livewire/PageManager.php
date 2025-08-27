@@ -21,7 +21,26 @@ class PageManager extends Component
     public function loadPages()
     {
         $storage = app(JsonPageStorage::class);
-        $this->pages = $storage->all('page');
+        $pageObjects = $storage->all('page');
+        
+        // Converter objetos PageData para arrays simples
+        $this->pages = array_map(function($page) {
+            if ($page instanceof PageData) {
+                return [
+                    'title' => $page->title,
+                    'slug' => $page->slug,
+                    'content' => $page->content,
+                    'published' => $page->published,
+                    'headerEnabled' => $page->headerEnabled,
+                    'footerEnabled' => $page->footerEnabled,
+                    'customCss' => $page->customCss,
+                    'customJs' => $page->customJs,
+                    'createdAt' => $page->createdAt,
+                    'updatedAt' => $page->updatedAt ?? null
+                ];
+            }
+            return (array) $page;
+        }, $pageObjects);
     }
     
     public function createPage()
@@ -54,36 +73,35 @@ class PageManager extends Component
         }
     }
     
-    
-public function togglePublish($slug)
-{
-    $storage = app(JsonPageStorage::class);
-    $page = $storage->find($slug, 'page');
-    
-    if ($page instanceof PageData) {
-        // Criar novo DTO com dados atualizados
-        $updatedPage = new PageData(
-            title: $page->title,
-            slug: $page->slug,
-            content: $page->content,
-            published: !$page->published,
-            headerEnabled: $page->headerEnabled,
-            footerEnabled: $page->footerEnabled,
-            customCss: $page->customCss,
-            customJs: $page->customJs,
-            createdAt: $page->createdAt
-        );
+    public function togglePublish($slug)
+    {
+        $storage = app(JsonPageStorage::class);
+        $page = $storage->find($slug, 'page');
         
-        $storage->savePage($updatedPage);
-        $this->loadPages();
-        
-        $message = $updatedPage->published 
-            ? Translator::trans('page_published')
-            : Translator::trans('page_unpublished');
+        if ($page instanceof PageData) {
+            // Criar novo DTO com dados atualizados
+            $updatedPage = new PageData(
+                title: $page->title,
+                slug: $page->slug,
+                content: $page->content,
+                published: !$page->published,
+                headerEnabled: $page->headerEnabled,
+                footerEnabled: $page->footerEnabled,
+                customCss: $page->customCss,
+                customJs: $page->customJs,
+                createdAt: $page->createdAt
+            );
             
-        session()->flash('message', $message);
+            $storage->savePage($updatedPage);
+            $this->loadPages();
+            
+            $message = $updatedPage->published 
+                ? Translator::trans('page_published')
+                : Translator::trans('page_unpublished');
+                
+            session()->flash('message', $message);
+        }
     }
-}
     
     public function render()
     {
