@@ -60,7 +60,8 @@
     <div class="flex justify-between items-center mb-4">
         <div class="flex items-center">
             <span class="text-2xl mr-2">{{ $blockIcon }}</span>
-            <span class="font-medium text-gray-800"> {{  __('pagebuilder::messages.'.$blockLabel) }} </span>
+            <span class="font-medium text-gray-800">{{  __('pagebuilder::messages.'.$blockLabel) }}</span>
+
         </div>
         
         <div class="flex items-center space-x-1">
@@ -72,10 +73,11 @@
     <!-- Block Content -->
     <template x-if="editing">
         <div class="space-y-4" @click.stop>
+
             @foreach($blockSchema as $fieldName => $field)
                 <div class="block-field">
                     <label class="block text-sm font-medium mb-2 text-gray-700">
-                        {{ __('pagebuilder::messages.'.$field['label']) }}
+                        {{ $field['label'] }}
                         @if(isset($field['required']) && $field['required'])
                             <span class="text-red-500">*</span>
                         @endif
@@ -385,7 +387,7 @@
                 <!-- Default Block Preview -->
                 <div class="text-center p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200">
                     <div class="text-3xl mb-3">{{ $blockIcon }}</div>
-                    <h3 class="font-semibold text-gray-700 mb-1"> {{  __('pagebuilder::messages.'.$blockLabel) }} </h3>
+                    <h3 class="font-semibold text-gray-700 mb-1">{{ __('pagebuilder::messages.'.$blockLabel) }}</h3>
                     <p class="text-sm text-gray-500">{{ __('pagebuilder::messages.click_to_configure') }}</p>
                 </div>
             @endif
