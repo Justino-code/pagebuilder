@@ -3,6 +3,7 @@
 namespace Justino\PageBuilder\Services;
 
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 use Justino\PageBuilder\DTOs\{
     PageData,
     TemplateData,
@@ -115,9 +116,9 @@ class JsonPageStorage
     protected function generateSlug(array $data, string $type): string
     {
         if ($type === 'page') {
-            return \Illuminate\Support\Str::slug($data['title'] ?? 'untitled');
+            return Str::slug($data['title'] ?? 'untitled');
         }
         
-        return $type . '_' . (\Illuminate\Support\Str::slug($data['name'] ?? '') ?: uniqid());
+        return $type . '_' . (Str::slug($data['name'] ?? '') ?: uniqid());
     }
 }

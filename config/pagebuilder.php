@@ -2,9 +2,18 @@
 
 return [
     // Configurações básicas
-    'storage' => [
-        'driver' => env('PAGEBUILDER_STORAGE_DRIVER', 'json'),
+     'storage' => [
+        'driver' => env('PAGEBUILDER_STORAGE_DRIVER', 'file'),
         'path' => storage_path('app/pagebuilder'),
+        'max_revisions' => env('PAGEBUILDER_MAX_REVISIONS', 10),
+        'backup' => [
+            'enabled' => env('PAGEBUILDER_BACKUP_ENABLED', true),
+            'retention_days' => env('PAGEBUILDER_BACKUP_RETENTION_DAYS', 30),
+        ],
+        'cleanup' => [
+            'auto_cleanup' => env('PAGEBUILDER_AUTO_CLEANUP', false),
+            'cleanup_schedule' => env('PAGEBUILDER_CLEANUP_SCHEDULE', '0 2 * * *'), // Daily at 2 AM
+        ],
     ],
     
     'media' => [

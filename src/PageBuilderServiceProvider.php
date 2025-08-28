@@ -5,12 +5,14 @@ namespace Justino\PageBuilder;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
 use Livewire\Livewire;
+use Justino\PageBuilder\Contracts\StorageInterface;
+use Justino\PageBuilder\Services\Storage\FileStorage;
+use Justino\PageBuilder\Services\PageBuilderService;
 
 class PageBuilderServiceProvider extends ServiceProvider
 {
     public function boot()
     {
-
         $this->loadViewsFrom(__DIR__.'/resources/views', 'pagebuilder');
         $this->loadTranslationsFrom(__DIR__.'/resources/lang', 'pagebuilder');
         
@@ -27,10 +29,6 @@ class PageBuilderServiceProvider extends ServiceProvider
                 __DIR__.'/resources/assets' => public_path('vendor/pagebuilder'),
             ], 'pagebuilder-assets');
             
-            /*$this->publishesMigrations([
-                __DIR__.'/../database/migrations' => database_path('migrations'),
-            ], 'pagebuilder-migrations');*/
-
             $this->publishes([
                 __DIR__.'/resources/lang' => resource_path('lang/vendor/pagebuilder'),
             ], 'pagebuilder-lang');
@@ -42,15 +40,36 @@ class PageBuilderServiceProvider extends ServiceProvider
 
     public function register()
     {
-        $this->mergeConfigFrom(
-        __DIR__.'/../config/pagebuilder.php', 'pagebuilder');
+        $this->mergeConfigFrom(__DIR__.'/../config/pagebuilder.php', 'pagebuilder');
     
+        // Registrar implementação de storage
+        $this->app->singleton(StorageInterface::class, function ($app) {
+            $driver = config('pagebuilder.storage.driver', 'json');
+            
+            switch ($driver) {
+                case 'json':
+                case 'file':
+                    return new FileStorage();
+                // Futuras implementações:
+                // case 'database':
+                //     return new DatabaseStorage();
+                // case 's3':
+                //     return new S3Storage();
+                default:
+                    throw new \InvalidArgumentException("Driver de armazenamento não suportado: {$driver}");
+            }
+        });
+        
+        // Registrar serviços
         $this->app->singleton(BlockManager::class, function ($app) {
             return new BlockManager();
         });
         
-        $this->app->singleton(JsonPageStorage::class, function ($app) {
-            return new JsonPageStorage();
+        $this->app->singleton(PageBuilderService::class, function ($app) {
+            return new PageBuilderService(
+                $app->make(StorageInterface::class),
+                $app->make(BlockManager::class)
+            );
         });
         
         $this->app->singleton(PageLogger::class, function ($app) {
@@ -60,10 +79,14 @@ class PageBuilderServiceProvider extends ServiceProvider
         // Registrar middleware
         $this->app['router']->aliasMiddleware('pagebuilder.auth', Http\Middleware\PageBuilderAuth::class);
 
+        // Registrar comandos
         if ($this->app->runningInConsole()) {
             $this->commands([
                 \Justino\PageBuilder\Console\Commands\InstallCommand::class,
                 \Justino\PageBuilder\Console\Commands\PublishTranslations::class,
+                \Justino\PageBuilder\Console\Commands\StorageStatsCommand::class,
+                \Justino\PageBuilder\Console\Commands\StorageBackupCommand::class,
+                \Justino\PageBuilder\Console\Commands\StorageCleanupCommand::class,
             ]);
         }
     }
@@ -71,8 +94,8 @@ class PageBuilderServiceProvider extends ServiceProvider
     protected function registerRoutes()
     {
         Route::group([
-            'prefix' => config('pagebuilder.route_prefix', 'page-builder'),
-            'middleware' => config('pagebuilder.middleware', ['web']),
+            'prefix' => config('pagebuilder.route.prefix', 'page-builder'),
+            'middleware' => config('pagebuilder.route.middleware', ['web']),
         ], function () {
             $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
         });
@@ -87,7 +110,6 @@ class PageBuilderServiceProvider extends ServiceProvider
         Livewire::component('template-editor', Http\Livewire\TemplateEditor::class);
         Livewire::component('template-manager', Http\Livewire\TemplateManager::class);
         Livewire::component('language-selector', Http\Livewire\LanguageSelector::class);
-        Livewire::component('style-editor', \Justino\PageBuilder\Http\Livewire\AdvancedStyleEditor::class);
+        Livewire::component('style-editor', Http\Livewire\AdvancedStyleEditor::class);
     }
-
 }

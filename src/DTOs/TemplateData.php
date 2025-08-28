@@ -2,6 +2,8 @@
 
 namespace Justino\PageBuilder\DTOs;
 
+use Illuminate\Support\Carbon;
+
 class TemplateData
 {
     public function __construct(
@@ -12,10 +14,13 @@ class TemplateData
         public array $styles = [],
         public bool $isDefault = false,
         public ?string $createdAt = null,
-        public ?string $updatedAt = null
+        public ?string $updatedAt = null,
+        public string $theme = 'system',
+        public string $version = '1.0.0',
+        public ?string $lastModifiedBy = null
     ) {
-        $this->createdAt = $createdAt ?? now()->toISOString();
-        $this->updatedAt = $updatedAt ?? now()->toISOString();
+        $this->createdAt = $createdAt ?? Carbon::now()->toISOString();
+        $this->updatedAt = $updatedAt ?? Carbon::now()->toISOString();
     }
 
     public static function fromArray(array $data): self
@@ -28,7 +33,10 @@ class TemplateData
             styles: $data['styles'] ?? [],
             isDefault: $data['is_default'] ?? false,
             createdAt: $data['created_at'] ?? null,
-            updatedAt: $data['updated_at'] ?? null
+            updatedAt: $data['updated_at'] ?? null,
+            theme: $data['theme'] ?? 'system',
+            version: $data['version'] ?? '1.0.0',
+            lastModifiedBy: $data['last_modified_by'] ?? null
         );
     }
 
@@ -42,12 +50,47 @@ class TemplateData
             'styles' => $this->styles,
             'is_default' => $this->isDefault,
             'created_at' => $this->createdAt,
-            'updated_at' => $this->updatedAt
+            'updated_at' => $this->updatedAt,
+            'theme' => $this->theme,
+            'version' => $this->version,
+            'last_modified_by' => $this->lastModifiedBy
         ];
     }
 
     public function toJson(): string
     {
-        return json_encode($this->toArray(), JSON_PRETTY_PRINT);
+        return json_encode($this->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    }
+    
+    public function markAsDefault(): void
+    {
+        $this->isDefault = true;
+        $this->updatedAt = Carbon::now()->toISOString();
+    }
+    
+    public function removeAsDefault(): void
+    {
+        $this->isDefault = false;
+        $this->updatedAt = Carbon::now()->toISOString();
+    }
+    
+    public function updateVersion(): void
+    {
+        $versionParts = explode('.', $this->version);
+        $patch = (int)($versionParts[2] ?? 0) + 1;
+        $this->version = "{$versionParts[0]}.{$versionParts[1]}.{$patch}";
+        $this->updatedAt = Carbon::now()->toISOString();
+    }
+    
+    public function setModifiedBy(string $userId): void
+    {
+        $this->lastModifiedBy = $userId;
+        $this->updatedAt = Carbon::now()->toISOString();
+    }
+    
+    public function applyTheme(string $theme): void
+    {
+        $this->theme = $theme;
+        $this->updatedAt = Carbon::now()->toISOString();
     }
 }
