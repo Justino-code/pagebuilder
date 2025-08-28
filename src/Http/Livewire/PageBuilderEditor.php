@@ -7,6 +7,7 @@ use Livewire\WithFileUploads;
 use Justino\PageBuilder\Contracts\StorageInterface;
 use Justino\PageBuilder\Services\PageBuilderService;
 use Justino\PageBuilder\Services\BlockManager;
+use Justino\PageBuilder\Services\BlockRenderer;
 use Justino\PageBuilder\Helpers\Translator;
 use Justino\PageBuilder\Rules\UniquePageSlug;
 use Livewire\Attributes\On;
@@ -60,7 +61,11 @@ class PageBuilderEditor extends Component
         'mediaSelected',
         'stylesApplied',
         'themeChanged',
-        'versionRestored'
+        'versionRestored',
+        'blockSelected',
+        'blockUpdated',
+        'blockRemoved',
+        'blockMoved'
     ];
 
     public function mount($pageSlug = null)
@@ -71,14 +76,10 @@ class PageBuilderEditor extends Component
         if (!$this->isNew) {
             $this->loadPage();
         } else {
-            // Inicializar dados padrão para nova página
             $this->initializeNewPage();
         }
     }
     
-    /**
-     * Carrega os dados da página
-     */
     protected function loadPage(): void
     {
         $this->isLoading = true;
@@ -88,7 +89,7 @@ class PageBuilderEditor extends Component
             $pageData = $storage->loadPage($this->pageSlug);
             
             if (!$pageData) {
-                session()->flash('error', Translator::trans('page_not_found'));
+                session()->flash('error', Translator::trans('messages.page_not_found'));
                 $this->redirect(route('pagebuilder.pages.index'));
                 return;
             }
@@ -105,24 +106,18 @@ class PageBuilderEditor extends Component
             $this->styles = $pageData->styles;
             $this->version = $pageData->version;
             
-            //dd($storage->listVersions($this->pageSlug));
-
-            // Carregar versões
             $this->versions = array_map(function ($version) {
                 return json_decode(json_encode($version), true);
             }, $storage->listVersions($this->pageSlug));
             
         } catch (\Exception $e) {
-            session()->flash('error', Translator::trans('load_error') . ': ' . $e->getMessage());
+            session()->flash('error', Translator::trans('messages.load_error') . ': ' . $e->getMessage());
             logger()->error('Erro ao carregar página', ['error' => $e->getMessage()]);
         } finally {
             $this->isLoading = false;
         }
     }
     
-    /**
-     * Inicializa dados para nova página
-     */
     protected function initializeNewPage(): void
     {
         $this->title = 'Nova Página';
@@ -138,9 +133,6 @@ class PageBuilderEditor extends Component
         $this->version = '1.0.0';
     }
     
-    /**
-     * Salva a página (rascunho ou publicação)
-     */
     public function save($publish = false)
     {
         $this->isSaving = true;
@@ -160,7 +152,6 @@ class PageBuilderEditor extends Component
             
             $pageBuilderService = app(PageBuilderService::class);
             
-            // Criar DTO com dados atuais
             $pageData = new PageData(
                 title: $this->title,
                 slug: $this->slug,
@@ -176,10 +167,8 @@ class PageBuilderEditor extends Component
             );
             
             if ($this->isNew) {
-                // Criar nova página
                 $result = $pageBuilderService->createPage($pageData->toArray(), auth()->id(), $publish);
             } else {
-                // Atualizar página existente
                 $result = $pageBuilderService->updatePage(
                     $this->pageSlug, 
                     $pageData->toArray(), 
@@ -191,22 +180,20 @@ class PageBuilderEditor extends Component
             if ($result) {
                 $this->saveStatus = 'success';
                 $this->saveMessage = $publish 
-                    ? Translator::trans('page_published') 
-                    : Translator::trans('page_saved_draft');
+                    ? Translator::trans('messages.page_published') 
+                    : Translator::trans('messages.page_saved_draft');
                 
-                // Atualizar slug se mudou
                 if ($this->isNew || $this->pageSlug !== $this->slug) {
                     $oldSlug = $this->pageSlug;
                     $this->pageSlug = $this->slug;
                     $this->isNew = false;
                     
                     if ($oldSlug && $oldSlug !== $this->slug) {
-                        // Redirecionar para novo slug
                         $this->redirect(route('pagebuilder.pages.edit', $this->slug));
                     }
                 }
                 
-                // Recarregar versões
+                $storage = app(StorageInterface::class);
                 $this->versions = array_map(function ($version) {
                     return json_decode(json_encode($version), true);
                 }, $storage->listVersions($this->pageSlug));
@@ -218,32 +205,23 @@ class PageBuilderEditor extends Component
             
         } catch (\Exception $e) {
             $this->saveStatus = 'error';
-            $this->saveMessage = Translator::trans('save_error') . ': ' . $e->getMessage();
+            $this->saveMessage = Translator::trans('messages.save_error') . ': ' . $e->getMessage();
             logger()->error('Erro ao salvar página', ['error' => $e->getMessage()]);
         }
         
         $this->isSaving = false;
     }
     
-    /**
-     * Publica a página
-     */
     public function publish()
     {
         $this->save(true);
     }
     
-    /**
-     * Salva como rascunho
-     */
     public function saveDraft()
     {
         $this->save(false);
     }
     
-    /**
-     * Despublica a página
-     */
     public function unpublish()
     {
         try {
@@ -253,8 +231,6 @@ class PageBuilderEditor extends Component
             if ($result) {
                 $this->published = false;
                 session()->flash('message', Translator::trans('page_unpublished'));
-                
-                // Recarregar página para garantir dados consistentes
                 $this->loadPage();
             }
             
@@ -264,9 +240,6 @@ class PageBuilderEditor extends Component
         }
     }
     
-    /**
-     * Deleta a página
-     */
     public function delete()
     {
         if (!$this->pageSlug) {
@@ -288,9 +261,6 @@ class PageBuilderEditor extends Component
         }
     }
     
-    /**
-     * Duplica a página
-     */
     public function duplicate()
     {
         try {
@@ -298,16 +268,14 @@ class PageBuilderEditor extends Component
             $pageData = $storage->loadPage($this->pageSlug);
             
             if ($pageData) {
-                // Criar novo slug
                 $newSlug = $pageData->slug . '-copy-' . time();
                 $newTitle = $pageData->title . ' (Cópia)';
                 
-                // Criar nova página com dados duplicados
                 $newPageData = new PageData(
                     title: $newTitle,
                     slug: $newSlug,
                     content: $pageData->content,
-                    published: false, // Sempre salvar como rascunho
+                    published: false,
                     headerEnabled: $pageData->headerEnabled,
                     footerEnabled: $pageData->footerEnabled,
                     customCss: $pageData->customCss,
@@ -331,9 +299,6 @@ class PageBuilderEditor extends Component
         }
     }
     
-    /**
-     * Adiciona um bloco ao conteúdo
-     */
     public function addBlock($blockType)
     {
         $blockManager = app(BlockManager::class);
@@ -347,44 +312,29 @@ class PageBuilderEditor extends Component
             ];
             
             $this->selectedBlockIndex = count($this->content) - 1;
-            
-            // Criar versão após adicionar bloco
             $this->createVersion('Adicionado bloco: ' . $blockType);
         }
     }
     
-    /**
-     * Atualiza bloco quando modificado
-     */
     #[On('block-updated')]
     public function onBlockUpdated($index, $data)
     {
         if (isset($this->content[$index])) {
             $this->content[$index]['data'] = $data;
-            
-            // Criar versão após modificação significativa
             $this->createVersion('Bloco atualizado');
         }
     }
     
-    /**
-     * Remove bloco
-     */
     #[On('block-removed')]
     public function onBlockRemoved($index)
     {
         if (isset($this->content[$index])) {
             array_splice($this->content, $index, 1);
             $this->selectedBlockIndex = null;
-            
-            // Criar versão após remover bloco
             $this->createVersion('Bloco removido');
         }
     }
     
-    /**
-     * Move bloco
-     */
     #[On('block-moved')]
     public function onBlockMoved($fromIndex, $toIndex)
     {
@@ -392,23 +342,21 @@ class PageBuilderEditor extends Component
             $block = $this->content[$fromIndex];
             array_splice($this->content, $fromIndex, 1);
             array_splice($this->content, $toIndex, 0, [$block]);
-            
-            // Criar versão após reordenar blocos
             $this->createVersion('Blocos reordenados');
         }
     }
     
-    /**
-     * Seleciona bloco
-     */
+    #[On('block-selected')]
+    public function onBlockSelected($index)
+    {
+        $this->selectedBlockIndex = $index;
+    }
+    
     public function selectBlock($index)
     {
         $this->selectedBlockIndex = $index;
     }
     
-    /**
-     * Abre biblioteca de mídia
-     */
     public function openMediaLibrary($field = null)
     {
         $this->mediaFieldActive = $field;
@@ -422,89 +370,71 @@ class PageBuilderEditor extends Component
         $this->showMediaLibrary = true;
     }
     
-    /**
-     * Manipula seleção de mídia
-     */
     #[On('media-selected')]
     public function mediaSelected($url)
     {
-        if ($this->mediaFieldActive) {
-            // Encontrar o bloco ativo e atualizar o campo de mídia
-            if ($this->selectedBlockIndex !== null && isset($this->content[$this->selectedBlockIndex])) {
-                $this->content[$this->selectedBlockIndex]['data'][$this->mediaFieldActive] = $url;
-                
-                // Disparar atualização do bloco
-                $this->dispatch('block-updated', 
-                    index: $this->selectedBlockIndex, 
-                    data: $this->content[$this->selectedBlockIndex]['data']
-                );
+        if ($this->mediaFieldActive && $this->selectedBlockIndex !== null) {
+            $fieldPath = $this->mediaFieldActive;
+            $keys = explode('.', $fieldPath);
+            
+            if (count($keys) === 1) {
+                $this->content[$this->selectedBlockIndex]['data'][$keys[0]] = $url;
+            } elseif (count($keys) === 3) {
+                list($parent, $index, $field) = $keys;
+                if (isset($this->content[$this->selectedBlockIndex]['data'][$parent][$index])) {
+                    $this->content[$this->selectedBlockIndex]['data'][$parent][$index][$field] = $url;
+                }
             }
+            
+            $this->dispatch('block-updated', 
+                index: $this->selectedBlockIndex, 
+                data: $this->content[$this->selectedBlockIndex]['data']
+            );
+            
             $this->mediaFieldActive = null;
         }
         $this->showMediaLibrary = false;
     }
 
-    /**
-     * Abre editor de estilos
-     */
     #[On('open-style-editor')]
     public function openStyleEditor()
     {
         $this->showStyleEditor = true;
     }
 
-    /**
-     * Aplica estilos do editor avançado
-     */
     #[On('stylesApplied')]
     public function applyStyles($styles, $css)
     {
         $this->pageStyles = $styles;
         
-        // Adicionar CSS customizado apenas se não estiver vazio
         if (!empty(trim($css))) {
             $this->customCss = $css . "\n" . $this->customCss;
         }
         
         $this->showStyleEditor = false;
         session()->flash('message', Translator::trans('styles_applied'));
-        
-        // Criar versão após aplicar estilos
         $this->createVersion('Estilos aplicados');
     }
 
-    /**
-     * Manipula mudança de tema
-     */
     #[On('themeChanged')]
     public function onThemeChanged($theme)
     {
         $this->theme = $theme;
-        
-        // Criar versão após mudar tema
         $this->createVersion('Tema alterado para: ' . $theme);
     }
 
-    /**
-     * Atualiza propriedades automaticamente
-     */
     public function updated($property, $value)
     {
-        // Atualizar automaticamente quando propriedades importantes forem alteradas
         if (str_starts_with($property, 'styles.')) {
             $this->dispatch('stylesUpdated', $this->styles);
         }
         
-        // Criar versão para mudanças significativas
         $significantProperties = ['title', 'slug', 'theme', 'customCss', 'customJs'];
         if (in_array($property, $significantProperties)) {
             $this->createVersion("Campo {$property} alterado");
         }
     }
     
-    /**
-     * Cria uma versão da página
-     */
     protected function createVersion(string $note = null): void
     {
         if (!$this->pageSlug) {
@@ -520,20 +450,15 @@ class PageBuilderEditor extends Component
                 $note
             );
             
-            // Atualizar lista de versões
             $this->versions = array_map(function ($version) {
                 return json_decode(json_encode($version), true);
             }, $storage->listVersions($this->pageSlug));
-
             
         } catch (\Exception $e) {
             logger()->error('Erro ao criar versão', ['error' => $e->getMessage()]);
         }
     }
     
-    /**
-     * Abre histórico de versões
-     */
     public function showVersionHistory()
     {
         try {
@@ -550,9 +475,6 @@ class PageBuilderEditor extends Component
         }
     }
     
-    /**
-     * Restaura uma versão específica
-     */
     public function restoreVersion($versionId)
     {
         try {
@@ -562,11 +484,7 @@ class PageBuilderEditor extends Component
             if ($result) {
                 session()->flash('message', Translator::trans('version_restored'));
                 $this->showVersionHistory = false;
-                
-                // Recarregar página com dados restaurados
                 $this->loadPage();
-                
-                // Disparar evento para outros componentes
                 $this->dispatch('versionRestored', $versionId);
             }
             
@@ -576,9 +494,6 @@ class PageBuilderEditor extends Component
         }
     }
     
-    /**
-     * Exporta a página
-     */
     public function export()
     {
         try {
@@ -605,7 +520,6 @@ class PageBuilderEditor extends Component
                 $filename,
                 [
                     'Content-Type' => 'application/json',
-                    'Content-Disposition' => 'attachment; filename="' . $filename . '"',
                 ]
             );
             
@@ -615,9 +529,6 @@ class PageBuilderEditor extends Component
         }
     }
     
-    /**
-     * Importa conteúdo para a página
-     */
     public function import($file)
     {
         try {
@@ -628,27 +539,21 @@ class PageBuilderEditor extends Component
                 throw new \Exception('Arquivo JSON inválido');
             }
             
-            // Validar estrutura básica
             if (!isset($data['content']) || !is_array($data['content'])) {
                 throw new \Exception('Estrutura de arquivo inválida');
             }
             
-            // Aplicar conteúdo importado
             $this->content = $data['content'];
             
-            // Aplicar estilos se existirem
             if (isset($data['styles'])) {
                 $this->pageStyles = $data['styles'];
             }
             
-            // Aplicar CSS customizado se existir
             if (isset($data['custom_css'])) {
                 $this->customCss = $data['custom_css'];
             }
             
             session()->flash('message', Translator::trans('import_success'));
-            
-            // Criar versão após importação
             $this->createVersion('Conteúdo importado');
             
         } catch (\Exception $e) {
@@ -657,22 +562,13 @@ class PageBuilderEditor extends Component
         }
     }
     
-    /**
-     * Pré-visualiza a página
-     */
     public function preview()
     {
-        // Salvar primeiro como rascunho
         $this->saveDraft();
-        
-        // Abrir pré-visualização em nova aba
         $previewUrl = route('pagebuilder.pages.preview', $this->slug);
         $this->dispatch('openPreview', $previewUrl);
     }
     
-    /**
-     * Limpa o cache da página
-     */
     public function clearCache()
     {
         try {
@@ -687,35 +583,26 @@ class PageBuilderEditor extends Component
         }
     }
     
-    /**
-     * Renderiza o componente
-     */
     public function render()
     {
+        $blockManager = app(BlockManager::class);
+        
         return view('pagebuilder::livewire.page-builder-editor', [
-            'availableBlocks' => app(BlockManager::class)->getAvailableBlocks(),
+            'availableBlocks' => $blockManager->getAvailableBlocks(),
             'themeOptions' => $this->themeOptions,
             'isDirty' => $this->isDirty(),
             'hasPublishedVersion' => $this->hasPublishedVersion(),
         ]);
     }
     
-    /**
-     * Verifica se há alterações não salvas
-     */
     protected function isDirty(): bool
     {
         if ($this->isNew) {
             return !empty($this->title) || !empty($this->content);
         }
-        
-        // Em uma implementação real, você compararia com os dados originais
         return true;
     }
     
-    /**
-     * Verifica se existe versão publicada
-     */
     protected function hasPublishedVersion(): bool
     {
         if (!$this->pageSlug) {
@@ -732,9 +619,6 @@ class PageBuilderEditor extends Component
         }
     }
     
-    /**
-     * Reseta o formulário
-     */
     public function resetForm()
     {
         if ($this->isNew) {
@@ -746,9 +630,6 @@ class PageBuilderEditor extends Component
         session()->flash('message', Translator::trans('form_reset'));
     }
     
-    /**
-     * Validação em tempo real do slug
-     */
     public function updatedSlug($value)
     {
         $this->validateOnly('slug', [

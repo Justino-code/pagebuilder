@@ -358,9 +358,14 @@ class HeaderBlock extends BaseBlock implements Block
         $logoLink = $logo['link'] ?? '/';
         $logoStyles = $logo['styles'] ?? [];
         
-        $style = "color: {$logoStyles['color'] ?? '#000000'}; 
-                 font-size: {$logoStyles['font_size'] ?? '24px'};
-                 font-weight: {$logoStyles['font_weight'] ?? 'bold'};";
+        // Extrair valores com coalescência antes de usar na string
+        $color = $logoStyles['color'] ?? '#000000';
+        $fontSize = $logoStyles['font_size'] ?? '24px';
+        $fontWeight = $logoStyles['font_weight'] ?? 'bold';
+        
+        $style = "color: {$color}; 
+                 font-size: {$fontSize};
+                 font-weight: {$fontWeight};";
         
         if ($logoType === 'text') {
             $logoText = $logo['text'] ?? 'My Website';
@@ -375,8 +380,8 @@ class HeaderBlock extends BaseBlock implements Block
                 "<a href='{$logoLink}' class='logo-text' style='{$style}'>Logo</a>";
         }
     }
-    
-    protected function renderMenu(array $menuItems): string
+
+   protected function renderMenu(array $menuItems): string
     {
         $menuHtml = '';
         
@@ -387,11 +392,17 @@ class HeaderBlock extends BaseBlock implements Block
             $isButton = $item['is_button'] ?? false;
             $styles = $item['styles'] ?? [];
             
+            // Extrair valores com coalescência antes de usar na string
+            $hoverColor = $styles['hover_color'] ?? '#007bff';
+            $hoverBg = $styles['hover_background'] ?? 'transparent';
+            $color = $styles['color'] ?? '#333333';
+            $backgroundColor = $styles['background_color'] ?? 'transparent';
+            
             $itemClass = $isButton ? 'menu-item button' : 'menu-item';
-            $style = "--hover-color: {$styles['hover_color'] ?? '#007bff'};
-                     --hover-bg: {$styles['hover_background'] ?? 'transparent'};
-                     color: {$styles['color'] ?? '#333333'};
-                     background-color: {$styles['background_color'] ?? 'transparent'};";
+            $style = "--hover-color: {$hoverColor};
+                     --hover-bg: {$hoverBg};
+                     color: {$color};
+                     background-color: {$backgroundColor};";
             
             $menuHtml .= "
                 <li>

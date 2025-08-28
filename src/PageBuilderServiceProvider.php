@@ -8,6 +8,7 @@ use Livewire\Livewire;
 use Justino\PageBuilder\Contracts\StorageInterface;
 use Justino\PageBuilder\Services\Storage\FileStorage;
 use Justino\PageBuilder\Services\PageBuilderService;
+use Justino\PageBuilder\Services\BlockManager;
 
 class PageBuilderServiceProvider extends ServiceProvider
 {
@@ -65,6 +66,8 @@ class PageBuilderServiceProvider extends ServiceProvider
         $this->app->singleton(BlockManager::class, function ($app) {
             return new BlockManager();
         });
+
+        //dd(BlockManager::class);
         
         $this->app->singleton(PageBuilderService::class, function ($app) {
             return new PageBuilderService(
@@ -112,7 +115,7 @@ class PageBuilderServiceProvider extends ServiceProvider
         Livewire::component('template-manager', Http\Livewire\TemplateManager::class);
         Livewire::component('language-selector', Http\Livewire\LanguageSelector::class);
         Livewire::component('style-editor', Http\Livewire\AdvancedStyleEditor::class);
-        Livewire::component('pagebuilder-block-editor', \Justino\PageBuilder\Http\Livewire\BlockEditor::class);
+        Livewire::component('block-editor', \Justino\PageBuilder\Http\Livewire\BlockEditor::class);
     }
 
     protected function registerCustomBlocks(): void

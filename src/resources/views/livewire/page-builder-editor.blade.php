@@ -100,14 +100,14 @@
             <div class="mb-6">
                 <h3 class="font-medium mb-3 text-gray-700 dark:text-gray-300">{{ __('pagebuilder::messages.blocks_library') }}</h3>
                 <div class="grid grid-cols-2 gap-2">
-                    @foreach($availableBlocks as $blockType => $blockConfig)
+                    @foreach($availableBlocks as $block)
                         <button 
-                            wire:click="addBlock('{{ $blockType }}')"
+                            wire:click="addBlock('{{ $block['type'] }}')"
                             class="p-3 border border-gray-200 dark:border-gray-600 rounded-lg text-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
-                            title="{{ $blockConfig['label'] }}"
+                            title="{{ $block['label'] }}"
                         >
-                            <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">{{ $blockConfig['icon'] }}</div>
-                            <div class="text-xs text-gray-600 dark:text-gray-400 font-medium">{{ $blockConfig['label'] }}</div>
+                            <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">{{ $block['icon'] }}</div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400 font-medium">{{ $block['label'] }}</div>
                         </button>
                     @endforeach
                 </div>
@@ -249,10 +249,11 @@
                                 wire:click="selectBlock({{ $index }})"
                                 class="cursor-pointer transition-transform hover:scale-[1.02]"
                             >
-                                <livewire:page-builder-block 
-                                    :index="$index"
-                                    :block="$block"
-                                    :isSelected="$selectedBlockIndex === $index"
+                                <livewire:block-editor 
+                                    :blockId="$index"
+                                    :blockType="$block['type']"
+                                    :initialData="$block['data'] ?? []"
+                                    :initialStyles="$block['styles'] ?? []"
                                     :key="'block-'.$index"
                                 />
                             </div>
@@ -263,12 +264,12 @@
                                 <p class="text-sm">{{ __('pagebuilder::messages.click_block_to_start') }}</p>
                                 <div class="mt-6">
                                     <div class="inline-flex flex-col space-y-2">
-                                        @foreach(array_slice($availableBlocks, 0, 3) as $blockType => $blockConfig)
+                                        @foreach(array_slice($availableBlocks, 0, 3) as $block)
                                             <button 
-                                                wire:click="addBlock('{{ $blockType }}')"
+                                                wire:click="addBlock('{{ $block['type'] }}')"
                                                 class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                                             >
-                                                {{ $blockConfig['label'] }}
+                                                {{ $block['label'] }}
                                             </button>
                                         @endforeach
                                     </div>
@@ -437,21 +438,21 @@
                             <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="text-sm font-medium text-gray-900 dark:text-white">
-                                        v{{ $version->versionNumber }}
+                                        v{{ $version['versionNumber'] ?? '1.0.0' }}
                                     </span>
                                     <span class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-full">
-                                        {{ $version->getDisplayType() }}
+                                        {{ $version['type'] ?? 'revision' }}
                                     </span>
                                 </div>
                                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                                    {{ $version->note ?? __('pagebuilder::messages.no_description') }}
+                                    {{ $version['note'] ?? __('pagebuilder::messages.no_description') }}
                                 </p>
                                 <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                                    <span>{{ $version->getFormattedDate() }}</span>
-                                    <span>{{ $version->createdBy }}</span>
+                                    <span>{{ $version['created_at'] ?? now() }}</span>
+                                    <span>{{ $version['created_by'] ?? auth()->user()->name }}</span>
                                 </div>
                                 <div class="mt-3">
-                                    <button wire:click="restoreVersion('{{ $version->versionId }}')"
+                                    <button wire:click="restoreVersion('{{ $version['id'] }}')"
                                             class="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors">
                                         {{ __('pagebuilder::messages.restore_version') }}
                                     </button>
@@ -527,7 +528,6 @@
 
 @push('scripts')
 <script>
-    // Auto-slug generation from title
     document.addEventListener('livewire:load', function() {
         const titleInput = document.querySelector('input[wire\\:model="title"]');
         const slugInput = document.querySelector('input[wire\\:model="slug"]');
@@ -544,7 +544,7 @@
                     const slug = e.target.value
                         .toLowerCase()
                         .trim()
-                        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove accents
+                        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
                         .replace(/[^a-z0-9\s-]/g, '')
                         .replace(/[\s-]+/g, '-')
                         .replace(/^-+|-+$/g, '');
@@ -556,34 +556,28 @@
         }
     });
     
-    // Keyboard shortcuts
     document.addEventListener('keydown', function(e) {
-        // Ctrl+S or Cmd+S to save
         if ((e.ctrlKey || e.metaKey) && e.key === 's') {
             e.preventDefault();
             Livewire.dispatch('save-draft');
         }
         
-        // Ctrl+P or Cmd+P to publish
         if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
             e.preventDefault();
             Livewire.dispatch('publish');
         }
         
-        // Delete selected block
         if (e.key === 'Delete' && Livewire.get('selectedBlockIndex') !== null) {
             e.preventDefault();
             Livewire.dispatch('block-removed', { index: Livewire.get('selectedBlockIndex') });
         }
         
-        // Escape to deselect block
         if (e.key === 'Escape' && Livewire.get('selectedBlockIndex') !== null) {
             e.preventDefault();
             Livewire.set('selectedBlockIndex', null);
         }
     });
     
-    // Confirm before leaving with unsaved changes
     window.addEventListener('beforeunload', function(e) {
         if (Livewire.get('isDirty')) {
             e.preventDefault();

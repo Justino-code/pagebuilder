@@ -305,37 +305,6 @@ class FooterBlock extends BaseBlock implements Block
         ";
     }
     
-    protected function renderLogo(array $logo): string
-    {
-        $logoType = $logo['type'] ?? 'text';
-        $logoLink = $logo['link'] ?? '/';
-        
-        if ($logoType === 'text') {
-            $logoText = $logo['text'] ?? 'My Website';
-            return "
-                <div class='footer-logo mb-4'>
-                    <a href='{$logoLink}' class='text-2xl font-bold'>
-                        {$logoText}
-                    </a>
-                </div>
-            ";
-        } else {
-            $logoImage = $logo['image'] ?? '';
-            $altText = $logo['text'] ?? 'Logo';
-            return $logoImage ? "
-                <div class='footer-logo mb-4'>
-                    <a href='{$logoLink}'>
-                        <img src='{$logoImage}' alt='{$altText}' class='h-12'>
-                    </a>
-                </div>
-            " : "
-                <div class='footer-logo mb-4'>
-                    <a href='{$logoLink}' class='text-2xl font-bold'>Logo</a>
-                </div>
-            ";
-        }
-    }
-    
     protected function renderSections(array $sections, array $styles): string
     {
         $sectionsHtml = '';
@@ -371,13 +340,44 @@ class FooterBlock extends BaseBlock implements Block
         
         return $sectionsHtml;
     }
-    
+
+    protected function renderLogo(array $logo): string
+    {
+        $logoType = $logo['type'] ?? 'text';
+        $logoLink = $logo['link'] ?? '/';
+        
+        if ($logoType === 'text') {
+            $logoText = $logo['text'] ?? 'My Website';
+            return "
+                <div class='footer-logo mb-4'>
+                    <a href='{$logoLink}' class='text-2xl font-bold'>
+                        {$logoText}
+                    </a>
+                </div>
+            ";
+        } else {
+            $logoImage = $logo['image'] ?? '';
+            $altText = $logo['text'] ?? 'Logo';
+            return $logoImage ? "
+                <div class='footer-logo mb-4'>
+                    <a href='{$logoLink}'>
+                        <img src='{$logoImage}' alt='{$altText}' class='h-12'>
+                    </a>
+                </div>
+            " : "
+                <div class='footer-logo mb-4'>
+                    <a href='{$logoLink}' class='text-2xl font-bold'>Logo</a>
+                </div>
+            ";
+        }
+    }
+
     protected function renderSocialLinks(array $socialLinks): string
     {
         $socialHtml = '';
         $icons = [
             'facebook' => '📘',
-            'twitter' => '🐦',
+            'twitter' => '🐦', 
             'instagram' => '📸',
             'linkedin' => '💼',
             'youtube' => '📺',

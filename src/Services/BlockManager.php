@@ -141,4 +141,14 @@ class BlockManager
     {
         return array_keys($this->blocks);
     }
+
+    /**
+     * TODO
+     * Remover futuramente
+     * 
+     */
+    public function getBlockLabelSlug(string $blockLabel): string
+    {
+        return Str::slug($blockLabel, '_');
+    }
 }
