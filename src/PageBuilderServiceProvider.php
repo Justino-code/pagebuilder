@@ -36,6 +36,7 @@ class PageBuilderServiceProvider extends ServiceProvider
         
         $this->registerRoutes();
         $this->registerLivewireComponents();
+        $this->registerCustomBlocks();
     }
 
     public function register()
@@ -111,5 +112,22 @@ class PageBuilderServiceProvider extends ServiceProvider
         Livewire::component('template-manager', Http\Livewire\TemplateManager::class);
         Livewire::component('language-selector', Http\Livewire\LanguageSelector::class);
         Livewire::component('style-editor', Http\Livewire\AdvancedStyleEditor::class);
+        Livewire::component('pagebuilder-block-editor', \Justino\PageBuilder\Http\Livewire\BlockEditor::class);
+    }
+
+    protected function registerCustomBlocks(): void
+    {
+        $this->app->booted(function () {
+            $blockManager = $this->app->make(BlockManager::class);
+            $customBlocks = config('pagebuilder.blocks.custom', []);
+            
+            foreach ($customBlocks as $blockClass) {
+                try {
+                    $blockManager->registerBlock($blockClass);
+                } catch (\Exception $e) {
+                    logger()->error("Failed to register custom block {$blockClass}: " . $e->getMessage());
+                }
+            }
+        });
     }
 }

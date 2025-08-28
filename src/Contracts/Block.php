@@ -10,4 +10,6 @@ interface Block
     public static function schema(): array;
     public static function defaults(): array;
     public function render(array $data): string;
+    public static function getEditorComponent(): string;
+    public static function getPreviewComponent(): string;
 }

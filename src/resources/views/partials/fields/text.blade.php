@@ -1,0 +1,23 @@
+<div class="field-group text-field mb-4">
+    <label class="block text-sm font-medium text-gray-700 mb-1">
+        {{ $field['label'] }}
+        @if(($field['required'] ?? false))
+            <span class="text-red-500">*</span>
+        @endif
+    </label>
+    
+    <input 
+        type="text" 
+        wire:model="{{ $model }}" 
+        class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+        placeholder="{{ $field['placeholder'] ?? $field['label'] }}"
+        @if($field['required'] ?? false) required @endif>
+    
+    @if(!empty($field['description']))
+        <p class="mt-1 text-xs text-gray-500">{{ $field['description'] }}</p>
+    @endif
+    
+    @error($model)
+        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+    @enderror
+</div>
