@@ -105,8 +105,12 @@ class PageBuilderEditor extends Component
             $this->styles = $pageData->styles;
             $this->version = $pageData->version;
             
+            //dd($storage->listVersions($this->pageSlug));
+
             // Carregar versões
-            $this->versions = $storage->listVersions($this->pageSlug);
+            $this->versions = array_map(function ($version) {
+                return json_decode(json_encode($version), true);
+            }, $storage->listVersions($this->pageSlug));
             
         } catch (\Exception $e) {
             session()->flash('error', Translator::trans('load_error') . ': ' . $e->getMessage());
@@ -203,7 +207,9 @@ class PageBuilderEditor extends Component
                 }
                 
                 // Recarregar versões
-                $this->versions = app(StorageInterface::class)->listVersions($this->pageSlug);
+                $this->versions = array_map(function ($version) {
+                    return json_decode(json_encode($version), true);
+                }, $storage->listVersions($this->pageSlug));
             }
             
         } catch (PageValidationException $e) {
@@ -515,7 +521,10 @@ class PageBuilderEditor extends Component
             );
             
             // Atualizar lista de versões
-            $this->versions = $storage->listVersions($this->pageSlug);
+            $this->versions = array_map(function ($version) {
+                return json_decode(json_encode($version), true);
+            }, $storage->listVersions($this->pageSlug));
+
             
         } catch (\Exception $e) {
             logger()->error('Erro ao criar versão', ['error' => $e->getMessage()]);
@@ -529,7 +538,10 @@ class PageBuilderEditor extends Component
     {
         try {
             $storage = app(StorageInterface::class);
-            $this->versions = $storage->listVersions($this->pageSlug);
+            $this->versions = array_map(function ($version) {
+                return json_decode(json_encode($version), true);
+            }, $storage->listVersions($this->pageSlug));
+
             $this->showVersionHistory = true;
             
         } catch (\Exception $e) {
