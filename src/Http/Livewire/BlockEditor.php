@@ -4,8 +4,9 @@ namespace Justino\PageBuilder\Http\Livewire;
 
 use Livewire\Component;
 use Justino\PageBuilder\Services\BlockManager;
-use Justino\PageBuilder\DTOs\BlockData;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
 
 class BlockEditor extends Component
 {
@@ -15,6 +16,8 @@ class BlockEditor extends Component
     public $blockStyles = [];
     public $isEditing = false;
     public $validationErrors = [];
+    public $hasError = false;
+    public $errorMessage = '';
     
     protected $blockManager;
     protected $listeners = [
@@ -24,52 +27,130 @@ class BlockEditor extends Component
     
     public function mount($blockId, $blockType, $initialData = [], $initialStyles = [])
     {
-        $this->blockId = $blockId;
-        $this->blockType = $blockType;
-        $this->blockData = $initialData;
-        $this->blockStyles = $initialStyles;
-        $this->blockManager = app(BlockManager::class);
+        try {
+            $this->validateInputs($blockId, $blockType, $initialData, $initialStyles);
+            
+            $this->blockId = $blockId;
+            $this->blockType = $blockType;
+            $this->blockData = $initialData;
+            $this->blockStyles = $initialStyles;
+            $this->blockManager = app(BlockManager::class);
+            
+            $this->validateBlockType();
+            $this->fillWithDefaults();
+            
+        } catch (\Exception $e) {
+            $this->handleError($e);
+        }
+    }
+    
+    protected function validateInputs($blockId, $blockType, $initialData, $initialStyles): void
+    {
+        if (!is_int($blockId) && !is_string($blockId)) {
+            throw new InvalidArgumentException('Block ID must be integer or string');
+        }
         
-        // Preencher com valores padrão se necessário
-        $this->fillWithDefaults();
+        if (!is_string($blockType) || empty($blockType)) {
+            throw new InvalidArgumentException('Block type must be a non-empty string');
+        }
+        
+        if (!is_array($initialData)) {
+            throw new InvalidArgumentException('Initial data must be an array');
+        }
+        
+        if (!is_array($initialStyles)) {
+            throw new InvalidArgumentException('Initial styles must be an array');
+        }
+    }
+    
+    protected function validateBlockType(): void
+    {
+        if (!$this->blockManager->isValidBlockType($this->blockType)) {
+            throw new InvalidArgumentException("Block type '{$this->blockType}' is not registered");
+        }
     }
     
     protected function fillWithDefaults(): void
     {
-        $defaults = $this->blockManager->getBlockDefaults($this->blockType);
-        
-        foreach ($defaults as $key => $defaultValue) {
-            if (!isset($this->blockData[$key])) {
-                $this->blockData[$key] = $defaultValue;
+        try {
+            $defaults = $this->blockManager->getBlockDefaults($this->blockType);
+            
+            foreach ($defaults as $key => $defaultValue) {
+                if (!isset($this->blockData[$key])) {
+                    $this->blockData[$key] = $defaultValue;
+                }
             }
+        } catch (\Exception $e) {
+            Log::warning("Failed to fill defaults for block {$this->blockType}", [
+                'error' => $e->getMessage(),
+                'block_id' => $this->blockId
+            ]);
         }
+    }
+    
+    protected function handleError(\Exception $e): void
+    {
+        $this->hasError = true;
+        $this->errorMessage = 'Erro ao carregar bloco';
+        
+        Log::error('BlockEditor error: ' . $e->getMessage(), [
+            'block_id' => $this->blockId,
+            'block_type' => $this->blockType,
+            'exception' => $e
+        ]);
     }
     
     public function render()
     {
-        $blockClass = $this->blockManager->getBlockClass($this->blockType);
-        $schema = $this->blockManager->getBlockSchema($this->blockType);
+        if ($this->hasError) {
+            return view('pagebuilder::livewire.block-editor-error', [
+                'errorMessage' => $this->errorMessage,
+                'blockId' => $this->blockId,
+                'blockType' => $this->blockType
+            ]);
+        }
         
-        return view('pagebuilder::livewire.block-editor', [
-            'blockLabel' => $blockClass ? $blockClass::label() : $this->blockType,
-            'blockIcon' => $blockClass ? $blockClass::icon() : '📦',
-            'blockSchema' => $schema,
-            'editorComponent' => $this->blockManager->getEditorComponent($this->blockType),
-            'previewComponent' => $this->blockManager->getPreviewComponent($this->blockType)
-        ]);
+        try {
+            $blockClass = $this->blockManager->getBlockClassName($this->blockType);
+            $schema = $this->blockManager->getBlockSchema($this->blockType);
+            
+            return view('pagebuilder::livewire.block-editor', [
+                'blockLabel' => $blockClass ? $blockClass::label() : $this->blockType,
+                'blockIcon' => $blockClass ? $blockClass::icon() : '📦',
+                'blockSchema' => $schema,
+                'editorComponent' => $this->blockManager->getEditorComponent($this->blockType),
+                'previewComponent' => $this->blockManager->getPreviewComponent($this->blockType)
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('BlockEditor render error: ' . $e->getMessage(), [
+                'block_id' => $this->blockId,
+                'block_type' => $this->blockType
+            ]);
+            
+            return view('pagebuilder::livewire.block-editor-error', [
+                'errorMessage' => 'Erro ao renderizar bloco',
+                'blockId' => $this->blockId,
+                'blockType' => $this->blockType
+            ]);
+        }
     }
     
     public function startEditing(): void
     {
+        if ($this->hasError) return;
+        
         $this->isEditing = true;
         $this->validationErrors = [];
-        $this->emit('blockEditorOpened', $this->blockId);
+        $this->dispatch('blockEditorOpened', blockId: $this->blockId);
     }
     
     public function save(): void
     {
+        if ($this->hasError) return;
+        
         if ($this->validateBlockData()) {
-            $this->emit('blockUpdated', [
+            $this->dispatch('blockUpdated', [
                 'id' => $this->blockId,
                 'type' => $this->blockType,
                 'data' => $this->blockData,
@@ -77,39 +158,52 @@ class BlockEditor extends Component
             ]);
             
             $this->isEditing = false;
-            $this->emit('notify', 'Block saved successfully!', 'success');
+            $this->dispatch('notify', message: 'Bloco salvo com sucesso!', type: 'success');
         }
     }
     
     public function cancel(): void
     {
+        if ($this->hasError) return;
+        
         $this->isEditing = false;
         $this->validationErrors = [];
-        $this->emit('blockEditCancelled', $this->blockId);
+        $this->dispatch('blockEditCancelled', blockId: $this->blockId);
     }
     
     public function remove(): void
     {
-        $this->emit('blockRemoved', $this->blockId);
+        $this->dispatch('blockRemoved', blockId: $this->blockId);
     }
     
     protected function validateBlockData(): bool
     {
-        $schema = $this->blockManager->getBlockSchema($this->blockType);
-        $rules = $this->buildValidationRules($schema);
-        
-        $validator = Validator::make(
-            ['data' => $this->blockData],
-            ['data' => $rules]
-        );
-        
-        if ($validator->fails()) {
-            $this->validationErrors = $validator->errors()->get('data');
-            $this->emit('notify', 'Please fix the validation errors.', 'error');
+        try {
+            $schema = $this->blockManager->getBlockSchema($this->blockType);
+            $rules = $this->buildValidationRules($schema);
+            
+            $validator = Validator::make(
+                ['data' => $this->blockData],
+                ['data' => $rules]
+            );
+            
+            if ($validator->fails()) {
+                $this->validationErrors = $validator->errors()->get('data');
+                $this->dispatch('notify', message: 'Corrija os erros de validação.', type: 'error');
+                return false;
+            }
+            
+            return true;
+            
+        } catch (\Exception $e) {
+            Log::error('Block validation error: ' . $e->getMessage(), [
+                'block_id' => $this->blockId,
+                'block_type' => $this->blockType
+            ]);
+            
+            $this->validationErrors = ['Erro na validação do bloco'];
             return false;
         }
-        
-        return true;
     }
     
     protected function buildValidationRules(array $schema): array
@@ -123,7 +217,6 @@ class BlockEditor extends Component
                 $fieldRules[] = 'required';
             }
             
-            // Adicionar regras baseadas no tipo do campo
             switch ($fieldConfig['type'] ?? 'text') {
                 case 'email':
                     $fieldRules[] = 'email';
@@ -146,14 +239,32 @@ class BlockEditor extends Component
     
     public function handleMediaSelected(string $url, string $fieldPath): void
     {
-        $this->updateNestedField($fieldPath, $url);
-        $this->emit('fieldUpdated', $fieldPath, $url);
+        if ($this->hasError) return;
+        
+        try {
+            $this->updateNestedField($fieldPath, $url);
+            $this->dispatch('fieldUpdated', fieldPath: $fieldPath, value: $url);
+        } catch (\Exception $e) {
+            Log::error('Media selection error: ' . $e->getMessage(), [
+                'block_id' => $this->blockId,
+                'field_path' => $fieldPath
+            ]);
+        }
     }
     
     public function handleFieldUpdate(string $fieldPath, $value): void
     {
-        $this->updateNestedField($fieldPath, $value);
-        $this->emit('blockDataUpdated', $this->blockId, $fieldPath, $value);
+        if ($this->hasError) return;
+        
+        try {
+            $this->updateNestedField($fieldPath, $value);
+            $this->dispatch('blockDataUpdated', blockId: $this->blockId, fieldPath: $fieldPath, value: $value);
+        } catch (\Exception $e) {
+            Log::error('Field update error: ' . $e->getMessage(), [
+                'block_id' => $this->blockId,
+                'field_path' => $fieldPath
+            ]);
+        }
     }
     
     protected function updateNestedField(string $path, $value): void
@@ -173,47 +284,114 @@ class BlockEditor extends Component
     
     public function addRepeaterItem(string $fieldName): void
     {
-        $schema = $this->blockManager->getBlockSchema($this->blockType);
+        if ($this->hasError) return;
         
-        if (isset($schema[$fieldName]['type']) && $schema[$fieldName]['type'] === 'repeater') {
-            $newItem = [];
+        try {
+            $schema = $this->blockManager->getBlockSchema($this->blockType);
             
-            foreach ($schema[$fieldName]['fields'] as $subFieldName => $subFieldConfig) {
-                $newItem[$subFieldName] = $subFieldConfig['default'] ?? null;
+            if (isset($schema[$fieldName]['type']) && $schema[$fieldName]['type'] === 'repeater') {
+                $newItem = [];
+                
+                foreach ($schema[$fieldName]['fields'] as $subFieldName => $subFieldConfig) {
+                    $newItem[$subFieldName] = $subFieldConfig['default'] ?? null;
+                }
+                
+                if (!isset($this->blockData[$fieldName])) {
+                    $this->blockData[$fieldName] = [];
+                }
+                
+                $this->blockData[$fieldName][] = $newItem;
+                $this->dispatch('repeaterItemAdded', fieldName: $fieldName, index: count($this->blockData[$fieldName]) - 1);
             }
-            
-            if (!isset($this->blockData[$fieldName])) {
-                $this->blockData[$fieldName] = [];
-            }
-            
-            $this->blockData[$fieldName][] = $newItem;
-            $this->emit('repeaterItemAdded', $fieldName, count($this->blockData[$fieldName]) - 1);
+        } catch (\Exception $e) {
+            Log::error('Add repeater item error: ' . $e->getMessage(), [
+                'block_id' => $this->blockId,
+                'field_name' => $fieldName
+            ]);
         }
     }
     
     public function removeRepeaterItem(string $fieldName, int $index): void
     {
-        if (isset($this->blockData[$fieldName][$index])) {
-            array_splice($this->blockData[$fieldName], $index, 1);
-            $this->emit('repeaterItemRemoved', $fieldName, $index);
+        if ($this->hasError) return;
+        
+        try {
+            if (isset($this->blockData[$fieldName][$index])) {
+                array_splice($this->blockData[$fieldName], $index, 1);
+                $this->dispatch('repeaterItemRemoved', fieldName: $fieldName, index: $index);
+            }
+        } catch (\Exception $e) {
+            Log::error('Remove repeater item error: ' . $e->getMessage(), [
+                'block_id' => $this->blockId,
+                'field_name' => $fieldName,
+                'index' => $index
+            ]);
         }
     }
     
     public function moveRepeaterItem(string $fieldName, int $fromIndex, int $toIndex): void
     {
-        if (isset($this->blockData[$fieldName][$fromIndex]) && isset($this->blockData[$fieldName][$toIndex])) {
-            $item = $this->blockData[$fieldName][$fromIndex];
-            array_splice($this->blockData[$fieldName], $fromIndex, 1);
-            array_splice($this->blockData[$fieldName], $toIndex, 0, [$item]);
-            $this->emit('repeaterItemMoved', $fieldName, $fromIndex, $toIndex);
+        if ($this->hasError) return;
+        
+        try {
+            if (isset($this->blockData[$fieldName][$fromIndex]) && isset($this->blockData[$fieldName][$toIndex])) {
+                $item = $this->blockData[$fieldName][$fromIndex];
+                array_splice($this->blockData[$fieldName], $fromIndex, 1);
+                array_splice($this->blockData[$fieldName], $toIndex, 0, [$item]);
+                $this->dispatch('repeaterItemMoved', fieldName: $fieldName, fromIndex: $fromIndex, toIndex: $toIndex);
+            }
+        } catch (\Exception $e) {
+            Log::error('Move repeater item error: ' . $e->getMessage(), [
+                'block_id' => $this->blockId,
+                'field_name' => $fieldName,
+                'from_index' => $fromIndex,
+                'to_index' => $toIndex
+            ]);
         }
     }
     
     public function updated($property, $value): void
     {
-        if (str_starts_with($property, 'blockData.') || str_starts_with($property, 'blockStyles.')) {
-            $fieldPath = str_replace(['blockData.', 'blockStyles.'], '', $property);
-            $this->emit('blockDataChanged', $this->blockId, $fieldPath, $value);
+        if ($this->hasError) return;
+        
+        try {
+            if (str_starts_with($property, 'blockData.') || str_starts_with($property, 'blockStyles.')) {
+                $fieldPath = str_replace(['blockData.', 'blockStyles.'], '', $property);
+                $this->dispatch('blockDataChanged', blockId: $this->blockId, fieldPath: $fieldPath, value: $value);
+            }
+        } catch (\Exception $e) {
+            Log::error('Property update error: ' . $e->getMessage(), [
+                'block_id' => $this->blockId,
+                'property' => $property
+            ]);
+        }
+    }
+    
+    public function getBlockInfoProperty()
+    {
+        if ($this->hasError) {
+            return [
+                'type' => $this->blockType,
+                'has_error' => true,
+                'error_message' => $this->errorMessage
+            ];
+        }
+        
+        try {
+            $blockClass = $this->blockManager->getBlockClassName($this->blockType);
+            
+            return [
+                'type' => $this->blockType,
+                'label' => $blockClass ? $blockClass::label() : 'Unknown',
+                'icon' => $blockClass ? $blockClass::icon() : '📦',
+                'has_error' => false
+            ];
+        } catch (\Exception $e) {
+            return [
+                'type' => $this->blockType,
+                'has_error' => true,
+                'error_message' => 'Erro ao obter informações do bloco'
+            ];
         }
     }
 }

@@ -78,20 +78,20 @@ class BlockManager
         return $blocks;
     }
     
-    public function getBlockClass(string $type): ?string
+    public function getBlockClassName(string $type): ?string
     {
         return $this->blocks[$type] ?? null;
     }
     
     public function getBlockSchema(string $type): array
     {
-        $blockClass = $this->getBlockClass($type);
+        $blockClass = $this->getBlockClassName($type);
         return $blockClass ? $blockClass::schema() : [];
     }
     
     public function getBlockDefaults(string $type): array
     {
-        $blockClass = $this->getBlockClass($type);
+        $blockClass = $this->getBlockClassName($type);
         return $blockClass ? $blockClass::defaults() : [];
     }
     
@@ -107,7 +107,7 @@ class BlockManager
     
     public function createBlockInstance(string $type)
     {
-        $blockClass = $this->getBlockClass($type);
+        $blockClass = $this->getBlockClassName($type);
         
         if (!$blockClass) {
             throw new InvalidArgumentException("Block type '{$type}' not found");
@@ -132,11 +132,6 @@ class BlockManager
         }
     }
     
-    public function isValidBlockType(string $type): bool
-    {
-        return isset($this->blocks[$type]);
-    }
-    
     public function getRegisteredTypes(): array
     {
         return array_keys($this->blocks);
@@ -150,5 +145,43 @@ class BlockManager
     public function getBlockLabelSlug(string $blockLabel): string
     {
         return Str::slug($blockLabel, '_');
+    }
+
+    public function isValidBlockType(string $type): bool
+    {
+        return isset($this->blocks[$type]) && class_exists($this->blocks[$type]);
+    }
+
+    public function validateBlockData(string $type, array $data): array
+    {
+        if (!$this->isValidBlockType($type)) {
+            throw new InvalidArgumentException("Tipo de bloco inválido: {$type}");
+        }
+        
+        $schema = $this->getBlockSchema($type);
+        $errors = [];
+        
+        foreach ($schema as $fieldName => $fieldConfig) {
+            if (($fieldConfig['required'] ?? false) && !isset($data[$fieldName])) {
+                $errors[$fieldName] = "Campo obrigatório ausente";
+            }
+            
+            // Validação básica de tipo
+            if (isset($data[$fieldName])) {
+                $fieldType = $fieldConfig['type'] ?? 'text';
+                $isValid = match($fieldType) {
+                    'email' => filter_var($data[$fieldName], FILTER_VALIDATE_EMAIL),
+                    'url' => filter_var($data[$fieldName], FILTER_VALIDATE_URL),
+                    'number' => is_numeric($data[$fieldName]),
+                    default => true
+                };
+                
+                if (!$isValid) {
+                    $errors[$fieldName] = "Tipo de dado inválido para {$fieldType}";
+                }
+            }
+        }
+        
+        return $errors;
     }
 }

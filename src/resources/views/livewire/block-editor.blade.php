@@ -1,4 +1,5 @@
-<div wire:key="block-editor-{{ $blockId }}" 
+<div>
+    <div wire:key="block-editor-{{ $blockId }}" 
      class="block-editor-container mb-4 relative"
      x-data="{ isHovering: false }"
      @mouseenter="isHovering = true"
@@ -108,3 +109,5 @@
         align-items: center;
     }
 </style>
+
+</div>

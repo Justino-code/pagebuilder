@@ -97,7 +97,7 @@ class PageBuilderEditor extends Component
             $this->title = $pageData->title;
             $this->slug = $pageData->slug;
             $this->published = $pageData->published;
-            $this->content = $pageData->content;
+            $this->content = $this->validateContentArray($pageData->content);
             $this->customCss = $pageData->customCss;
             $this->customJs = $pageData->customJs;
             $this->headerEnabled = $pageData->headerEnabled;
@@ -301,10 +301,15 @@ class PageBuilderEditor extends Component
     
     public function addBlock($blockType)
     {
-        $blockManager = app(BlockManager::class);
-        $blockClass = $blockManager->getBlockClass($blockType);
-        
-        if ($blockClass) {
+        try {
+            $blockManager = app(BlockManager::class);
+            
+            if (!$blockManager->isValidBlockType($blockType)) {
+                throw new InvalidArgumentException("Tipo de bloco inválido: {$blockType}");
+            }
+            
+            $blockClass = $blockManager->getBlockClassName($blockType);
+            
             $this->content[] = [
                 'type' => $blockType,
                 'data' => $blockClass::defaults(),
@@ -313,6 +318,10 @@ class PageBuilderEditor extends Component
             
             $this->selectedBlockIndex = count($this->content) - 1;
             $this->createVersion('Adicionado bloco: ' . $blockType);
+            
+        } catch (\Exception $e) {
+            session()->flash('error', "Erro ao adicionar bloco: " . $e->getMessage());
+            Log::error('Add block error: ' . $e->getMessage());
         }
     }
     
@@ -641,4 +650,44 @@ class PageBuilderEditor extends Component
             ],
         ]);
     }
+
+    protected function validateContentArray(array $content): array
+    {
+        $validatedContent = [];
+        
+        foreach ($content as $index => $block) {
+            try {
+                if (!isset($block['type'])) {
+                    throw new InvalidArgumentException("Bloco sem tipo no índice {$index}");
+                }
+                
+                if (!is_array($block['data'] ?? [])) {
+                    $block['data'] = [];
+                }
+                
+                if (!is_array($block['styles'] ?? [])) {
+                    $block['styles'] = [];
+                }
+                
+                $blockManager = app(BlockManager::class);
+                
+                if (!$blockManager->isValidBlockType($block['type'])) {
+                    Log::warning("Tipo de bloco inválido encontrado", [
+                        'index' => $index,
+                        'type' => $block['type']
+                    ]);
+                    continue; // Pula blocos inválidos
+                }
+                
+                $validatedContent[] = $block;
+                
+            } catch (\Exception $e) {
+                Log::error("Erro ao validar bloco {$index}: " . $e->getMessage(), [
+                    'block_data' => $block
+                ]);
+            }
+        }
+        
+        return $validatedContent;
+    }    
 }
