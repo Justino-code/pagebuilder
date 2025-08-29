@@ -24,7 +24,7 @@
         @if($header)
             @php
                 $blockManager = app('Justino\PageBuilder\Services\BlockManager');
-                $headerBlock = $blockManager->getBlockClass('header');
+                $headerBlock = $blockManager->getBlockClassName('header');
             @endphp
             @if($headerBlock)
                 {!! (new $headerBlock())->render($header) !!}
@@ -36,7 +36,7 @@
         @foreach($page->content as $block)
             @php
                 $blockManager = app('Justino\PageBuilder\Services\BlockManager');
-                $blockClass = $blockManager->getBlockClass($block['type']);
+                $blockClass = $blockManager->getBlockClassName($block['type']);
             @endphp
             
             @if($blockClass)
@@ -53,7 +53,7 @@
         @if($footer)
             @php
                 $blockManager = app('Justino\PageBuilder\Services\BlockManager');
-                $footerBlock = $blockManager->getBlockClass('footer');
+                $footerBlock = $blockManager->getBlockClassName('footer');
             @endphp
             @if($footerBlock)
                 {!! (new $footerBlock())->render($footer) !!}

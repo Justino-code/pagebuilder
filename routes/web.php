@@ -5,7 +5,7 @@ use Justino\PageBuilder\Http\Controllers\PageController;
 
 // Rotas de visualização pública
 Route::get('/page/{slug}', [PageController::class, 'show'])->name('pagebuilder.page.show');
-Route::get('/preview/{slug}', [PageController::class, 'preview'])->name('pagebuilder.page.preview');
+Route::get('/preview/{slug}', [PageController::class, 'preview'])->name('pagebuilder.pages.preview');
 
 // Rotas do admin - todas handled pelo Livewire
 

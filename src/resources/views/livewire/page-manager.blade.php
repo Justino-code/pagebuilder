@@ -12,7 +12,6 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @php dd(pagebuilder); @endphp
                     @foreach($pages as $page)
                         <tr class="border-t">
                             <td class="px-4 py-3">{{ $page['title'] }}</td> <!-- CORRETO: sintaxe de array -->

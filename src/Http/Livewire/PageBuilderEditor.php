@@ -573,6 +573,9 @@ class PageBuilderEditor extends Component
     
     public function preview()
     {
+        if($this->slug === ''){
+            return;
+        }
         $this->saveDraft();
         $previewUrl = route('pagebuilder.pages.preview', $this->slug);
         $this->dispatch('openPreview', $previewUrl);
