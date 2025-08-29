@@ -19,11 +19,21 @@ class BlockEditor extends Component
     public $hasError = false;
     public $errorMessage = '';
     
-    protected $blockManager;
+    protected blockManager $blockManager;
     protected $listeners = [
         'mediaSelected' => 'handleMediaSelected',
         'fieldUpdated' => 'handleFieldUpdate'
     ];
+
+    public function boot(BlockManager $blockManager)
+    {
+        try {
+            $this->blockManager = $blockManager;
+        } catch (Exception $e) {
+            report($e);
+            $this->blockManager = new BlockManager(); // fallback
+        }
+    }
     
     public function mount($blockId, $blockType, $initialData = [], $initialStyles = [])
     {
@@ -34,7 +44,6 @@ class BlockEditor extends Component
             $this->blockType = $blockType;
             $this->blockData = $initialData;
             $this->blockStyles = $initialStyles;
-            $this->blockManager = app(BlockManager::class);
             
             $this->validateBlockType();
             $this->fillWithDefaults();
@@ -122,11 +131,13 @@ class BlockEditor extends Component
                 'previewComponent' => $this->blockManager->getPreviewComponent($this->blockType)
             ]);
             
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('BlockEditor render error: ' . $e->getMessage(), [
                 'block_id' => $this->blockId,
                 'block_type' => $this->blockType
             ]);
+
+            dump($this->blockType, $this->blockId, $this->blockData, $this->blockManager);
             
             return view('pagebuilder::livewire.block-editor-error', [
                 'errorMessage' => 'Erro ao renderizar bloco',

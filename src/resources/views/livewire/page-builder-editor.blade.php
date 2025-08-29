@@ -249,12 +249,28 @@
                                 wire:click="selectBlock({{ $index }})"
                                 class="cursor-pointer transition-transform hover:scale-[1.02]"
                             >
+                                @php
+                                    $blockData = $block['data'] ?? [];
+                                    $blockStyles = $block['styles'] ?? [];
+                                    
+                                    // Validação básica dos dados do bloco
+                                    if (!is_array($blockData)) {
+                                        $blockData = [];
+                                        Log::warning("Block data is not array", ['index' => $index, 'type' => $block['type'] ?? 'unknown']);
+                                    }
+                                    
+                                    if (!is_array($blockStyles)) {
+                                        $blockStyles = [];
+                                        Log::warning("Block styles is not array", ['index' => $index, 'type' => $block['type'] ?? 'unknown']);
+                                    }
+                                @endphp
+                                
                                 <livewire:block-editor 
                                     :blockId="$index"
                                     :blockType="$block['type']"
-                                    :initialData="$block['data'] ?? []"
-                                    :initialStyles="$block['styles'] ?? []"
-                                    :key="'block-'.$index"
+                                    :initialData="$blockData"
+                                    :initialStyles="$blockStyles"
+                                    :key="'block-'.$index.'-'.md5(serialize($blockData))"
                                 />
                             </div>
                         @empty
@@ -363,11 +379,11 @@
                             <div class="grid grid-cols-2 gap-4 text-sm">
                                 <div>
                                     <span class="text-gray-500 dark:text-gray-400">{{ __('pagebuilder::messages.created_at') }}:</span>
-                                    <p class="font-medium">{{ $page->createdAt ?? 'N/A' }}</p>
+                                    <p class="font-medium">{{ $page->created_at ?? 'N/A' }}</p>
                                 </div>
                                 <div>
                                     <span class="text-gray-500 dark:text-gray-400">{{ __('pagebuilder::messages.updated_at') }}:</span>
-                                    <p class="font-medium">{{ $page->updatedAt ?? 'N/A' }}</p>
+                                    <p class="font-medium">{{ $page->updated_at ?? 'N/A' }}</p>
                                 </div>
                                 <div>
                                     <span class="text-gray-500 dark:text-gray-400">{{ __('pagebuilder::messages.blocks_count') }}:</span>
@@ -448,7 +464,7 @@
                                     {{ $version['note'] ?? __('pagebuilder::messages.no_description') }}
                                 </p>
                                 <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                                    <span>{{ $version['created_at'] ?? now() }}</span>
+                                    <span>{{ $version['created_at'] ?? now()->format('d/m/Y H:i') }}</span>
                                     <span>{{ $version['created_by'] ?? auth()->user()->name }}</span>
                                 </div>
                                 <div class="mt-3">
